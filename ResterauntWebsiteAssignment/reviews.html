@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>The Jukebox</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <div class="topbar">
+            <button class="title-card" onclick="window.location.href='index.html';">The Jukebox</button>
+            <p class="info-card-top">1800-555-555</p>
+            <p class="info-card-btm">Open 24/7</p>
+            <p class="info-card-lwr">Made with NO AI!!</p>
+            <div class="topbar-seperator"></div>
+            <div class="center-layout">
+                <button class="topbar-button" onclick="window.location.href='menu.html'">Menu</button>
+                <button class="topbar-button">Reviews</button>
+                <button class="topbar-button">Photos</button>
+                <button class="topbar-button">Our Staff</button>
+            </div>
+        </div>
+
+        <div class="highlights" style="width: calc(100% - 20px); left: 10px;">
+            <h1>
+                Reviews
+            </h1>
+
+            <span class="hd1">5</span><progress max="100" value="63"></progress><br>
+            <span class="hd1">4</span><progress max="100" value="27"></progress><br>
+            <span class="hd1">3</span><progress max="100" value="0"></progress><br>
+            <span class="hd1">2</span><progress max="100" value="0"></progress><br>
+            <span class="hd1">1</span><progress max="100" value="10"></progress><br>
+
+            <hr>
+            <div class="review">
+                <h1>John Doe</h1>
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp"><br><br>
+                <span class="review-text">
+                    I loved the experience!
+                </span>
+            </div>
+            <hr>
+            <div class="review">
+                <h1>Jane Doe</h1>
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp"><br><br>
+                <span class="review-text">
+                    Amazing cooking from the chef!
+                </span>
+            </div>
+            <hr>
+            <div class="review">
+                <h1>Jane Doe</h1>
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp"><br><br>
+                <span class="review-text">
+                    Tasted great, but maybe a little too much salt?
+                </span>
+            </div>
+            <hr>
+            <div class="review">
+                <h1>John Doe</h1>
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp"><br><br>
+                <span class="review-text">
+                    I had an amazing time, my only critique would be the salt.
+                </span>
+            </div>
+            <hr>
+            <div class="review">
+                <h1>Karen Doe</h1>
+                <img class="checked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp">
+                <img class="unchecked" src="./Resources/star-on.webp"><br><br>
+                <span class="review-text">
+                    My steak was too juicy and my lobster was too buttery.
+                </span>
+            </div>
+        </div>
+
+        <script src="reviews.js"></script>
+    </body>
+
+</html>

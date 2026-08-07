@@ -1,0 +1,353 @@
+@import url('https://fonts.googleapis.com/css2?family=Dynalight&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
+
+:root {
+    --glow-effect-thing: rgba(254, 254, 254, 0.6); /* only here so i dont tear my skin off replacing colors by hand */
+}
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    background: #fffff0;
+    padding: 0;
+    margin: 0;
+}
+
+.topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    height: 75px;
+    background: #f72f10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    overflow: hidden;
+    gap: 15px;
+}
+
+.topbar-seperator {
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    height: 95%;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.2);
+    top: 2.5%;
+    left: 299px;
+}
+
+.center-layout {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: calc(100% - 300px);
+    padding: 0;
+    margin: 0;
+    height: 75px;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    overflow: hidden;
+    gap: 15px;
+}
+
+.title-card {
+    cursor: pointer;
+    position: absolute;
+    font-family: "Dynalight";
+    font-weight: 200;
+    padding: 0 15px;
+    color: #f8f8f8;
+    height: 100%;
+    font-size: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    top: 0;
+    transition: all 0.3s cubic-bezier(0.1, 0.5, 0.7, 1);
+    left: 0;
+}
+
+.title-card:hover {
+    text-shadow: 0 0 10px var(--glow-effect-thing), 0 0 20px var(--glow-effect-thing), 0 0 30px var(--glow-effect-thing), 0 0 40px var(--glow-effect-thing), 0 0 50px var(--glow-effect-thing), 0 0 60px var(--glow-effect-thing), 0 0 70px
+}
+
+.info-card-top {
+    position: absolute;
+    font-family: "DM Serif Display";
+    font-weight: 400;
+    font-size: 16px;
+    top: 7px;
+    left: 200px;
+    color: #f8f8f8;
+    margin: 0;
+}
+
+.info-card-btm {
+    position: absolute;
+    font-family: "DM Serif Display";
+    font-weight: 400;
+    font-size: 16px;
+    top: 22px;
+    left: 200px;
+    color: #f8f8f8;
+    margin: 0;
+}
+
+.info-card-lwr {
+    position: absolute;
+    font-family: "DM Serif Display";
+    font-weight: 400;
+    font-size: 16px;
+    top: 37px;
+    left: 200px;
+    color: #f8f8f8;
+    margin: 0;
+}
+
+.topbar-button {
+    cursor: pointer;
+    color: #f8f8f8;
+    font-family: "DM Serif Display";
+    font-weight: 400;
+    height: 100%;
+    width: fit-content;
+    padding: 0 15px;
+    display: inline-flex;
+    font-size: 32px;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    transition: 0.25s;
+}
+
+.topbar-button:hover {
+    background: rgba(10, 10, 10, 0.1);
+}
+
+.highlights {
+    padding: 5px 15px;
+    background: #f72f10;
+    position: absolute;
+    width: calc(100% - 740px);
+    height: fit-content;
+    top: 85px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.highlight-img {
+    position: absolute;
+    top: 85px;
+    right: 10px;
+    width: 700px;
+    height: 700px;
+    border: none;
+    z-index: 100;
+    object-fit: cover;
+}
+
+img {
+    border: none;
+    max-width: 100%;
+    height: auto;
+}
+
+h1 {
+    font-family: "Dynalight";
+    font-weight: 400;
+    font-size: 42px;
+    color: #f8f8f8;
+}
+
+p {
+    font-family: "DM Serif Display";
+    font-size: 24px;
+    color: #f8f8f8;
+    font-weight: 200;
+    white-space: pre-line;
+    height: fit-content;
+    padding-top: 0;
+}
+
+.price {
+    align-self: right;
+    justify-self: right;
+    float: right;
+    font-size: 24px;
+}
+
+li::marker {
+    color: #fff;
+}
+
+.hd1 {
+    font-family: "Dynalight";
+    font-weight: 400;
+    font-size: 16px;
+    color: #f8f8f8;
+    margin-right: 6px;
+}
+
+progress {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 250px;
+    height: 20px;
+    border: 2px white solid;
+    border-radius: 10px;
+    background-color: #e0e0e0;
+}
+
+progress::-webkit-progress-bar {
+    background-color: #e0e0e0;
+    border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+    background-color: #f63b3b;
+    border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+    background-color: #f63b3b;
+    border-radius: 10px;
+}
+
+hr {
+    border: 0;
+    background: #f9f9f9;
+    width: 99%;
+    height: 1px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+img.checked,
+img.unchecked {
+    width: 16px;
+    height: 16px;
+    max-width: 16px;
+    max-height: 16px;
+    margin: 2px;
+}
+
+img.unchecked {
+    filter: grayscale(100%);
+}
+
+.review-text {
+    font-family: "DM Serif Display";
+    font-weight: 400;
+    font-size: 28px;
+    color: #f8f8f8;
+    margin-right: 6px;
+}
+
+@media (max-width: 1024px) {
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .topbar {
+        position: relative;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .topbar-seperator {
+        display: none;
+    }
+
+    .center-layout {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        right: auto;
+        top: auto;
+        overflow: visible;
+        background: transparent;
+    }
+
+    .title-card {
+        position: relative;
+        padding: 15px;
+        height: auto;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+    }
+
+    .info-card-top,
+    .info-card-btm,
+    .info-card-lwr {
+        position: relative;
+        top: auto;
+        left: auto;
+        padding: 0 15px 5px 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .topbar-button {
+        height: auto;
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-sizing: border-box;
+        justify-content: flex-start;
+        display: flex;
+    }
+
+    .highlight-img {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: 5%;
+        width: 90%;
+        height: auto;
+        max-width: 100%;
+        aspect-ratio: 1 / 1;
+        margin-top: 20px;
+        display: block;
+        object-fit: cover;
+    }
+
+    .highlights {
+        position: relative;
+        top: auto;
+        left: 5%;
+        width: 90%;
+        margin-top: 20px;
+        margin-bottom: 40px;
+    }
+}

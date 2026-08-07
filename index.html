@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>My Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico">
+</head>
+
+<body>
+    <div class="left-nav">
+        <div class="theme-selector-container">
+            <select id="theme-selector">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="soulless">White</option>
+                <option value="black">Black</option>
+                <option value="lgreen">Light Green</option>
+                <option value="green">Green</option>
+                <option value="bad">Don't Select This One</option>
+            </select>
+        </div>
+        <a class="left-nav-entry" href="home.html" target="target-display" onclick="hideIframe()">Home</a>
+        <a class="left-nav-entry" href="assignments.html" target="target-display" onclick="hideIframe()">Assignments</a>
+    </div>
+
+    <iframe class="center-iframe" id="portfolio-iframe" name="target-display" src="home.html"></iframe>
+
+    <div class="right-news">
+        <div class="news-entry">
+            <p class="news-desc">
+                5/08/26<br>DigiTech assignment avaliable at the Assignments page. <a class="hyperlink"
+                    href="assignments.html" target="target-display" onclick="hideIframe()">Go to it?</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const selector = document.getElementById('theme-selector');
+        const iframe = document.getElementById('portfolio-iframe');
+
+        function hideIframe() {
+            iframe.style.opacity = '0';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            selector.value = theme;
+            localStorage.setItem('portfolio-theme', theme);
+
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+            }
+        }
+
+        function tilt(e, element) {
+            const rect = element.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const normalizedX = (x / rect.width) * 2 - 1;
+            const normalizedY = (y / rect.height) * 2 - 1;
+
+            const maxRotationX = 25;
+            const maxRotationY = 20;
+
+            const angleX = -normalizedY * maxRotationX;
+            const angleY = normalizedX * maxRotationY;
+
+            element.style.transform = `perspective(1000px) scale(1.05) rotateX(${angleX}deg) rotateY(${angleY}deg) translateZ(0)`;
+        }
+
+        function resetTilt(element) {
+            element.style.transform = 'perspective(1000px) scale(1) rotateX(0deg) rotateY(0deg) translateZ(0)';
+        }
+
+        selector.addEventListener('change', (e) => {
+            applyTheme(e.target.value);
+        });
+
+        const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+        applyTheme(savedTheme);
+
+        iframe.addEventListener('load', () => {
+            const currentTheme = localStorage.getItem('portfolio-theme') || 'light';
+            applyTheme(currentTheme);
+
+            setTimeout(() => {
+                iframe.style.opacity = '1';
+            }, 10);
+        });
+    </script>
+
+    <script>
+        const config = {
+            phrases: [
+                "My Portfolio",
+                "Robin's Portfolio",
+                "Cool Portfolio",
+                "Robin's Website",
+                "My Portfolio Site"
+            ],
+            minTypeSpeed: 50,
+            maxTypeSpeed: 250,
+            backspaceSpeed: 75,
+            holdTime: 2500,
+            typoChance: 0.10,
+            typoHoldTime: 300,
+            cursorBlinkSpeed: 500,
+            cursorChar: "│"
+        };
+
+        const nearbyKeys = {
+            'a': 'qwsz', 'b': 'vghn', 'c': 'xdfv', 'd': 'ersfxc', 'e': 'wsdr',
+            'f': 'rtgvcd', 'g': 'tyhbvf', 'h': 'yujnbg', 'i': 'ujko', 'j': 'uikmnh',
+            'k': 'ijlm', 'l': 'okp', 'm': 'njk', 'n': 'bhjm', 'o': 'iklp',
+            'p': 'ol', 'q': 'wa', 'r': 'edft', 's': 'wedvza', 't': 'rfgy',
+            'u': 'yhji', 'v': 'cfgb', 'w': 'qase', 'x': 'zsdc', 'y': 'tghu', 'z': 'asx'
+        };
+
+        let phraseIndex = 0;
+        let currentText = "";
+        let showCursor = true;
+        let isTypingActive = true;
+
+        setInterval(() => {
+            if (!isTypingActive) return;
+            showCursor = !showCursor;
+            updateTabTitle();
+        }, config.cursorBlinkSpeed);
+
+        function updateTabTitle() {
+            document.title = currentText + (showCursor ? config.cursorChar : " ");
+        }
+
+        const getRandomDelay = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        function getTypoCharacter(char) {
+            const lowerChar = char.toLowerCase();
+            if (nearbyKeys[lowerChar]) {
+                const options = nearbyKeys[lowerChar];
+                const randomChar = options[Math.floor(Math.random() * options.length)];
+                return char === char.toUpperCase() ? randomChar.toUpperCase() : randomChar;
+            }
+            return String.fromCharCode(char.charCodeAt(0) + 1);
+        }
+
+        async function typePhrase() {
+            const fullPhrase = config.phrases[phraseIndex];
+            let i = 0;
+
+            while (i < fullPhrase.length) {
+                isTypingActive = false;
+
+                if (Math.random() < config.typoChance && i < fullPhrase.length - 1) {
+                    const wrongChar = getTypoCharacter(fullPhrase[i]);
+
+                    currentText += wrongChar;
+                    showCursor = true;
+                    updateTabTitle();
+                    await new Promise(resolve => setTimeout(resolve, config.typoHoldTime));
+
+                    currentText = currentText.slice(0, -1);
+                    updateTabTitle();
+                    await new Promise(resolve => setTimeout(resolve, config.backspaceSpeed));
+                }
+
+                currentText += fullPhrase[i];
+                showCursor = true;
+                updateTabTitle();
+                i++;
+
+                isTypingActive = true;
+                const delay = getRandomDelay(config.minTypeSpeed, config.maxTypeSpeed);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            await new Promise(resolve => setTimeout(resolve, config.holdTime));
+            await erasePhrase();
+        }
+
+        async function erasePhrase() {
+            while (currentText.length > 0) {
+                isTypingActive = false;
+                currentText = currentText.slice(0, -1);
+                showCursor = true;
+                updateTabTitle();
+                await new Promise(resolve => setTimeout(resolve, config.backspaceSpeed));
+            }
+
+            isTypingActive = true;
+            phraseIndex = (phraseIndex + 1) % config.phrases.length;
+            await typePhrase();
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            if (config.phrases.length > 0) {
+                typePhrase();
+            }
+        });
+    </script>
+</body>
+
+</html>
