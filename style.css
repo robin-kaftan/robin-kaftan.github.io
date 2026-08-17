@@ -24,6 +24,7 @@
     --bg-border: #e6ddbf;
     --text-main: #010101;
     --text-hyp: #5454ff;
+    --btnbor-hover: #e6ddbf;
     --navbtn-hover: #010101;
     --border-rad: 1rem;
     --font: 'Satoshi';
@@ -42,6 +43,7 @@
     --bg-border: #646052;
     --text-main: #f5f2e6;
     --text-hyp: #8a8aff;
+    --btnbor-hover: #646052;
     --navbtn-hover: #f5f2e6;
     --border-rad: 1rem;
     --font: 'Satoshi';
@@ -60,6 +62,7 @@
     --bg-border: #acacac;
     --text-main: #010101;
     --text-hyp: #5454ff;
+    --btnbor-hover: #acacac;
     --navbtn-hover: #010101;
     --border-rad: 0.8rem;
     --inflate-size: 1.05;
@@ -78,6 +81,7 @@
     --bg-border: #474747;
     --text-main: #fefefe;
     --text-hyp: #8a8aff;
+    --btnbor-hover: #474747;
     --navbtn-hover: #fefefe;
     --border-rad: 0.8rem;
     --inflate-size: 1.05;
@@ -96,6 +100,7 @@
     --bg-border: #baf5be;
     --text-main: #236620;
     --text-hyp: #b93aca;
+    --btnbor-hover: #baf5be;
     --navbtn-hover: #236620;
     --border-rad: 1.1rem;
     --inflate-size: 1.05;
@@ -114,6 +119,7 @@
     --bg-border: #57ad5d;
     --text-main: #d3ffd1;
     --text-hyp: #ef8dfc;
+    --btnbor-hover: #57ad5d;
     --navbtn-hover: #d3ffd1;
     --border-rad: 1.1rem;
     --font: 'Plus Jakarta Sans';
@@ -130,6 +136,7 @@
     --bg-border: #ff00b3;
     --text-main: #000000;
     --text-hyp: #ff0000;
+    --btnbor-hover: #ff00b3;
     --navbtn-hover: #000000;
     --border-rad: 6767px;
     --font: 'Impact';
@@ -148,6 +155,7 @@
     --bg-border: #ffffff;
     --text-main: #ffffff;
     --text-hyp: #ffff00;
+    --btnbor-hover: #ffff00;
     --navbtn-hover: #ffff00;
     --border-rad: 0;
     --font: '8BitOperator';
@@ -380,13 +388,13 @@ button {
 button:hover {
     transform: scale(var(--inflate-size));
     color: var(--navbtn-hover);
-    border-color: var(--navbtn-hover);
+    border-color: var(--btnbor-hover);
 }
 
 button:active {
     transform: scale(var(--deflate-size));
     color: var(--navbtn-hover);
-    border-color: var(--navbtn-hover);
+    border-color: var(--btnbor-hover);
 }
 
 h1 {
