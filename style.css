@@ -17,12 +17,14 @@
 :root,
 :root[data-theme="light"] {
     --bg-main: #cec69d;
+    --bg-mainborder: #cec69d;
     --bg-neg: #010101;
     --bg-panel: #fdf6cf;
     --bg-hover: #fffce6;
     --bg-border: #e6ddbf;
     --text-main: #010101;
     --text-hyp: #5454ff;
+    --navbtn-hover: #010101;
     --border-rad: 1rem;
     --font: 'Satoshi';
     --inflate-size: 1.05;
@@ -33,12 +35,14 @@
 
 :root[data-theme="dark"] {
     --bg-main: #3b361e;
+    --bg-mainborder: #3b361e;
     --bg-neg: #f9f9f9;
     --bg-panel: #6e6855;
     --bg-hover: #3b361e;
     --bg-border: #646052;
     --text-main: #f5f2e6;
     --text-hyp: #8a8aff;
+    --navbtn-hover: #f5f2e6;
     --border-rad: 1rem;
     --font: 'Satoshi';
     --inflate-size: 1.05;
@@ -49,12 +53,14 @@
 
 :root[data-theme="soulless"] {
     --bg-main: #fafafa;
+    --bg-mainborder: #fafafa;
     --bg-neg: #010101;
     --bg-panel: #efefef;
     --bg-hover: #fcfcfc;
     --bg-border: #acacac;
     --text-main: #010101;
     --text-hyp: #5454ff;
+    --navbtn-hover: #010101;
     --border-rad: 0.8rem;
     --inflate-size: 1.05;
     --deflate-size: 0.95;
@@ -65,12 +71,14 @@
 
 :root[data-theme="black"] {
     --bg-main: #060606;
+    --bg-mainborder: #060606;
     --bg-neg: #f9f9f9;
     --bg-panel: #484848;
     --bg-hover: #060606;
     --bg-border: #474747;
     --text-main: #fefefe;
     --text-hyp: #8a8aff;
+    --navbtn-hover: #fefefe;
     --border-rad: 0.8rem;
     --inflate-size: 1.05;
     --deflate-size: 0.95;
@@ -81,12 +89,14 @@
 
 :root[data-theme="lgreen"] {
     --bg-main: #a0dda4;
+    --bg-mainborder: #a0dda4;
     --bg-neg: #002b02;
     --bg-panel: #8ad18f;
     --bg-hover: #a0dda4;
     --bg-border: #baf5be;
     --text-main: #236620;
     --text-hyp: #b93aca;
+    --navbtn-hover: #236620;
     --border-rad: 1.1rem;
     --inflate-size: 1.05;
     --deflate-size: 0.95;
@@ -97,12 +107,14 @@
 
 :root[data-theme="green"] {
     --bg-main: #37833c;
+    --bg-mainborder: #37833c;
     --bg-neg: #cff0d1;
     --bg-panel: #439649;
     --bg-hover: #37833c;
     --bg-border: #57ad5d;
     --text-main: #d3ffd1;
     --text-hyp: #ef8dfc;
+    --navbtn-hover: #d3ffd1;
     --border-rad: 1.1rem;
     --font: 'Plus Jakarta Sans';
     --border-size: 0.25rem;
@@ -111,18 +123,38 @@
 
 :root[data-theme="bad"] {
     --bg-main: #ff0000;
+    --bg-mainborder: #ff0000;
     --bg-neg: #cff0d1;
     --bg-panel: #00e1ff;
     --bg-hover: #00ff11;
     --bg-border: #ff00b3;
     --text-main: #000000;
     --text-hyp: #ff0000;
+    --navbtn-hover: #000000;
     --border-rad: 6767px;
     --font: 'Impact';
     --inflate-size: 1.65;
     --deflate-size: 0.1;
     --border-size: 1rem;
     --bezier: cubic-bezier(0, 1, 0.1, 1.9);
+}
+
+:root[data-theme="tfx"] {
+    --bg-main: #000000;
+    --bg-mainborder: #ffffff;
+    --bg-neg: #ffffff;
+    --bg-panel: #000000;
+    --bg-hover: #000000;
+    --bg-border: #ffffff;
+    --text-main: #ffffff;
+    --text-hyp: #ffff00;
+    --navbtn-hover: #ffff00;
+    --border-rad: 0;
+    --font: '8BitOperator';
+    --inflate-size: 1;
+    --deflate-size: 1;
+    --border-size: 0.3rem;
+    --bezier: cubic-bezier(0, 0.25, 0.5, 0.75, 1);
 }
 
 html,
@@ -135,7 +167,7 @@ body {
     color: var(--text-main);
     will-change: background-color, color;
     transition: background-color 0.3s ease, color 0.3s ease;
-    scrollbar-color: var(--bg-main) var(--bg-panel);
+    scrollbar-color: var(--bg-mainborder) var(--bg-panel);
     overflow: auto;
 }
 
@@ -143,6 +175,16 @@ body {
 *::before,
 *::after {
     box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        scroll-behavior: auto;
+    }
 }
 
 .fakeConsole {
@@ -158,6 +200,11 @@ body {
     padding: var(--border-rad);
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.basic-viewport {
+    width: 100%;
+    aspect-ratio: 4 / 3;
 }
 
 .consoleEntry {
@@ -183,6 +230,7 @@ body {
     .left-nav,
     .right-news,
     iframe.center-iframe {
+        border: 0;
         min-height: 0;
         min-width: 0;
     }
@@ -194,6 +242,7 @@ body {
     }
 
     iframe.center-iframe {
+        border: 0;
         width: 100%;
         height: 100%;
     }
@@ -201,7 +250,7 @@ body {
 
 .left-nav {
     background: var(--bg-panel);
-    border: 0;
+    border: var(--border-size) solid var(--bg-border);
     border-radius: var(--border-rad);
     padding: 1rem;
     display: flex;
@@ -227,7 +276,7 @@ select#theme-selector {
     overflow: hidden;
     padding: 0.5rem;
     border-radius: var(--border-rad);
-    border: var(--border-size) solid var(--bg-main);
+    border: var(--border-size) solid var(--bg-mainborder);
     background-color: var(--bg-panel);
     color: var(--text-main);
     cursor: pointer;
@@ -252,16 +301,19 @@ select#theme-selector {
 .left-nav-entry:hover {
     background: var(--bg-hover);
     transform: scale(var(--inflate-size));
+    color: var(--navbtn-hover);
 }
 
 .left-nav-entry:active {
     background: var(--bg-main);
     transform: scale(var(--deflate-size));
+    color: var(--navbtn-hover);
 }
 
 .iframe-container {
-    background: var(--bg-panel);
+    background: transparent;
     border-radius: var(--border-rad);
+    border: var(--border-size) solid var(--bg-border);
     padding: 0.5rem;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -283,9 +335,9 @@ iframe.center-iframe {
         width: 100%;
         height: 60vh;
         margin: 1rem 0;
-        padding: 0; /* Remove inner padding so iframe fills edge-to-edge */
+        padding: 0;
         border: var(--border-size) solid var(--bg-border);
-        overflow: hidden; /* Hide container overflow; iframe scrolls inside */
+        overflow: hidden;
     }
 
     iframe.center-iframe {
@@ -302,7 +354,7 @@ iframe.center-iframe {
     border-radius: var(--border-rad);
     padding: 1rem;
     background: var(--bg-panel);
-    border: 0;
+    border: var(--border-size) solid var(--bg-border);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -327,10 +379,14 @@ button {
 
 button:hover {
     transform: scale(var(--inflate-size));
+    color: var(--navbtn-hover);
+    border-color: var(--navbtn-hover);
 }
 
 button:active {
     transform: scale(var(--deflate-size));
+    color: var(--navbtn-hover);
+    border-color: var(--navbtn-hover);
 }
 
 h1 {
@@ -452,8 +508,6 @@ hr {
         max-height: 60vh;
         margin-bottom: 1rem;
         margin-top: 1rem;
-        padding: 0.5rem;
-        border: var(--border-size) solid var(--bg-border);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
