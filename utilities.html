@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <link rel="stylesheet" href="style.css">
+
+        <style>
+            /* Inside the page loaded INSIDE the iframe */
+            html,
+            body {
+                height: 100%;
+                overflow-y: auto;
+                /* Ensure vertical scrolling is permitted */
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1 style="width: fit-content;">VPN IP Picker</h1>
+        <button onclick="document.getElementById('vpnipchooser').toggleAttribute('hidden')">Show/Hide</button>
+        <div style="grid-column: 1 / -1; padding: 0.25rem;" hidden id="vpnipchooser">
+            <h1>Utilities</h1>
+            <h2>VPN IP List</h2>
+            <p>
+                Pretty good list. Click the test button to check latency and speed.<br>
+                It grabs from a ton of VPN ips and tests them all for best for your system.<br>
+                INSTALLATION TUTORIAL: (windows)<br>
+            </p>
+            <ol>
+                <li>Open Windows settings (Win+I) and search VPN Settings.</li>
+                <li>Click Add VPN, then type any name.</li>
+                <li>Paste in the IP in the Adress box.</li>
+                <li>Type "vpn" into the Username and the Password boxes.</li>
+                <li>Hit connect from that menu or the sound/battery/wifi area.</li>
+            </ol>
+            <p>
+                Results <b>WILL</b> vary from test-to-test. This can be from current network conditions, or because the servers are warming up.<br>
+                Do not expect these to be fast. <b>They are free for a reason.</b><br>
+            </p>
+            <hr>
+
+            <div class="vpn-card" style="margin-bottom: 1.5rem;">
+                <button id="testConnection" onclick="run10SecondTest(this)">Test Connections</button>
+                <button hidden id="copyIP" onclick="navigator.clipboard.writeText('')">Copy IP</button>
+                <h1>Best Overall: <span id="bestOverall">Untested</span></h1>
+                <ul>
+                    <li>Speed:
+                        <ul>
+                            <li>Min: <span class="speed-min">Untested</span></li>
+                            <li>Avg: <span class="speed-avg">Untested</span></li>
+                            <li>Max: <span class="speed-max">Untested</span></li>
+                        </ul>
+                    </li>
+                    <li>Ping:
+                        <ul>
+                            <li>Min: <span class="ping-min">Untested</span></li>
+                            <li>Avg: <span class="ping-avg">Untested</span></li>
+                            <li>Max: <span class="ping-max">Untested</span></li>
+                        </ul>
+                    </li>
+                </ul><br>
+                <h1>Best Ping: <span id="bestPing">Untested</span></h1>
+                <ul>
+                    <li>Speed:
+                        <ul>
+                            <li>Min: <span class="speed-min-p">Untested</span></li>
+                            <li>Avg: <span class="speed-avg-p">Untested</span></li>
+                            <li>Max: <span class="speed-max-p">Untested</span></li>
+                        </ul>
+                    </li>
+                    <li>Ping:
+                        <ul>
+                            <li>Min: <span class="ping-min-p">Untested</span></li>
+                            <li>Avg: <span class="ping-avg-p">Untested</span></li>
+                            <li>Max: <span class="ping-max-p">Untested</span></li>
+                        </ul>
+                    </li>
+                </ul>
+                <h1>Best Speed: <span id="bestSpeed">Untested</span></h1>
+                <ul>
+                    <li>Speed:
+                        <ul>
+                            <li>Min: <span class="speed-min-s">Untested</span></li>
+                            <li>Avg: <span class="speed-avg-s">Untested</span></li>
+                            <li>Max: <span class="speed-max-s">Untested</span></li>
+                        </ul>
+                    </li>
+                    <li>Ping:
+                        <ul>
+                            <li>Min: <span class="ping-min-s">Untested</span></li>
+                            <li>Avg: <span class="ping-avg-s">Untested</span></li>
+                            <li>Max: <span class="ping-max-s">Untested</span></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="fakeConsole">
+                <span hidden class="consoleEntry" id="templateConsoleEntry">test</span>
+            </div>
+
+        </div>
+        <script>async function run10SecondTest(t) { t.disabled = !0, t.innerText = "Testing..."; const e = document.getElementById("bestOverall"), n = document.getElementById("bestPing"), o = document.getElementById("bestSpeed"), s = document.getElementById("copyIP"), i = document.querySelector(".fakeConsole"), r = document.getElementById("templateConsoleEntry"); s && (s.hidden = !0), e && (e.innerText = "Scanning servers..."), n && (n.innerText = "Scanning servers..."), o && (o.innerText = "Scanning servers..."), i && i.querySelectorAll(".consoleEntry:not(#templateConsoleEntry)").forEach(t => t.remove()); function a(t) { if (!r || !i) return; const e = r.cloneNode(!0); e.removeAttribute("id"), e.removeAttribute("hidden"), e.hidden = !1, e.innerText = t, i.appendChild(e), i.scrollTop = i.scrollHeight } const c = new Map; async function d(t) { if (c.has(t)) return c.get(t); try { const e = await fetch(`https://dns.google/resolve?name=${t}&type=A`), n = await e.json(), o = n.Answer?.find(t => 1 === t.type)?.data || t; return c.set(t, o), o } catch (e) { return t } } const u = 256, l = Array.from({ length: u }, ((t, e) => `public-vpn-${e + 1}.opengw.net`)), m = [], p = 40; async function f(t) { const e = []; for (let n = 0; n < 3; n++) { const o = performance.now(); try { const n = new AbortController, s = setTimeout((() => n.abort()), 1500); await fetch(`https://${t}/`, { method: "HEAD", mode: "no-cors", cache: "no-store", signal: n.signal }), clearTimeout(s), e.push(performance.now() - o) } catch (s) { } } if (!e.length) return void a(`${t}: Offline / Timed out`); try { const e = new AbortController, n = setTimeout((() => e.abort()), 1000); await fetch(`https://${t}/`, { method: "GET", mode: "no-cors", cache: "no-store", signal: e.signal }), clearTimeout(n) } catch (n) { } const n = []; for (let e = 0; e < 2; e++) { const o = performance.now(); try { const s = new AbortController, i = setTimeout((() => s.abort()), 4000), r = await fetch(`https://${t}/`, { method: "GET", mode: "no-cors", cache: "no-store", signal: s.signal }); clearTimeout(i); const c = await r.blob(), d = (performance.now() - o) / 1e3; if (d > 0) { const t = (8 * (c.size || 5e5) / d) / 1e6; n.push(t) } } catch (s) { } } n.length || n.push(.01); const o = Math.min(...e), s = e.reduce(((t, e) => t + e), 0) / e.length, i = Math.max(...e), r = Math.min(...n), c = n.reduce(((t, e) => t + e), 0) / n.length, u = Math.max(...n), p = 100 * c / (s + 1), y = await d(t); m.push({ host: t, ip: y, minPing: o, avgPing: s, maxPing: i, minSpeed: r, avgSpeed: c, maxSpeed: u, score: p }), a(`${t} (${y}): ${Math.round(s)}ms avg | ${c.toFixed(2)} Mbps avg (5s post-warmup) | Score: ${p.toFixed(1)}`) } let y = 0; async function g() { for (; y < l.length;)await f(l[y++]) } await Promise.all(Array.from({ length: p }, (() => g()))); function h(t, e) { const n = t => document.querySelector(t), o = n(`.ping-min${e}`), s = n(`.ping-avg${e}`), i = n(`.ping-max${e}`), r = n(`.speed-min${e}`), a = n(`.speed-avg${e}`), c = n(`.speed-max${e}`); o && (o.innerText = `${Math.round(t.minPing)} ms`), s && (s.innerText = `${Math.round(t.avgPing)} ms`), i && (i.innerText = `${Math.round(t.maxPing)} ms`), r && (r.innerText = `${t.minSpeed.toFixed(2)} Mbps`), a && (a.innerText = `${t.avgSpeed.toFixed(2)} Mbps`), c && (c.innerText = `${t.maxSpeed.toFixed(2)} Mbps`) } m.length ? (bestOverall = [...m].sort(((t, e) => e.score - t.score))[0], bestPing = [...m].sort(((t, e) => t.avgPing - e.avgPing))[0], bestSpeed = [...m].sort(((t, e) => e.avgSpeed - t.avgSpeed))[0], e && (e.innerText = `${bestOverall.host} (${bestOverall.ip})`), n && (n.innerText = `${bestPing.host} (${bestPing.ip})`), o && (o.innerText = `${bestSpeed.host} (${bestSpeed.ip})`), s && (s.onclick = () => navigator.clipboard.writeText(bestOverall.ip), s.hidden = !1), h(bestOverall, ""), h(bestPing, "-p"), h(bestSpeed, "-s"), a(`Done - 5s test completed (1s warmup discarded). Best Overall: ${bestOverall.host} (${bestOverall.ip})`), t.disabled = !1, t.innerText = "Test Connections") : (e && (e.innerText = "No responsive hosts found"), n && (n.innerText = "No responsive hosts found"), o && (o.innerText = "No responsive hosts found"), a("Test completed: No responsive hosts found."), t.disabled = !1, t.innerText = "Test Connections") }</script>
+
+        <script>
+            (function () {
+                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            })();
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SET_THEME') {
+                    document.documentElement.setAttribute('data-theme', event.data.theme);
+                }
+            });
+        </script>
+    </body>
+
+</html>

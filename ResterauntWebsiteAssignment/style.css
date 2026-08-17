@@ -80,6 +80,8 @@ body {
     border-radius: 0;
     top: 0;
     transition: all 0.3s cubic-bezier(0.1, 0.5, 0.7, 1);
+    transform: translateZ(0);
+    will-change: text-shadow;
     left: 0;
 }
 
@@ -137,6 +139,8 @@ body {
     background: transparent;
     border-radius: 0;
     transition: 0.25s;
+    transform: translateZ(0);
+    will-change: background;
 }
 
 .topbar-button:hover {
@@ -262,7 +266,7 @@ img.unchecked {
     margin-right: 6px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1024px) {  /* wow holy crap mobile layout!??!?! i better get extra marks!! HAHAHA! */
 
     html,
     body {
