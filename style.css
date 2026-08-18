@@ -187,6 +187,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -292,7 +293,57 @@ select#theme-selector {
     transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
 }
 
+select {
+    font-family: var(--font);
+    font-size: 1.1rem;
+    overflow: hidden;
+    padding: 0.5rem;
+    border-radius: var(--border-rad);
+    border: var(--border-size) solid var(--bg-mainborder);
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 500px;
+    font-family: var(--font);
+    font-size: 1.1rem;
+    overflow: hidden;
+    padding: 0.5rem;
+    border-radius: var(--border-rad);
+    border: var(--border-size) solid var(--bg-border);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    cursor: text;
+    outline: none;
+    transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
+}
+
+.search-input::placeholder {
+    color: var(--bg-border);
+}
+
+.gameImage {
+    width: 100px;
+    height: 100px;
+    image-rendering: auto;
+}
+
+.gameFrame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: none;
+    background: var(--bg-panel);
+    border-radius: var(--border-rad)
+}
+
 .left-nav-entry {
+    display: flex;
+    align-items: center;
     font-family: var(--font);
     user-select: none;
     font-size: 1.5rem;
@@ -302,8 +353,7 @@ select#theme-selector {
     overflow: hidden;
     border-radius: var(--border-rad);
     text-decoration: none;
-    display: block;
-    transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
+    transition: transform 0.25s var(--bezier) all;
 }
 
 .left-nav-entry:hover {
@@ -317,6 +367,13 @@ select#theme-selector {
     transform: scale(var(--deflate-size));
     color: var(--navbtn-hover);
 }
+
+.nav-text {
+    display: inline-block;
+    white-space: nowrap;
+    transform-origin: left center;
+}
+
 
 .iframe-container {
     background: transparent;
@@ -385,6 +442,20 @@ button {
     transition: transform 0.2s var(--bezier);
 }
 
+.emoji {
+    width: 1.25rem;
+    height: 1.25rem;
+    image-rendering: auto;
+    margin-right: 0.5rem;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    transform: translateX(-50px);
+    filter: drop-shadow(50px 0 0 var(--bg-neg));
+}
+
 button:hover {
     transform: scale(var(--inflate-size));
     color: var(--navbtn-hover);
@@ -439,7 +510,7 @@ hr {
     width: 95%;
     height: 1px;
     border: 0;
-    background: var(--bg-neg);
+    background: var(--bg-panel);
     margin-top: 2rem;
     margin-bottom: 2rem;
 }

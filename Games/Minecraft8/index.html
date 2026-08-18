@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <link rel="stylesheet" href="../../style.css">
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                overflow-y: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div style="grid-column: 1 / -1; padding: 0.25rem;">
+            <h1>Minecraft 1.8</h1>
+            <p>
+                WARNING: Data may not save! If you care about your worlds, DOWNLOAD THEM!<br>
+                This doesn't apply to servers, however. They usually save it themselves.
+            </p>
+
+            <iframe id="gameframe" class="gameFrame" src="./game.html"></iframe>
+
+            <button onclick="document.getElementById('gameframe').requestFullscreen()">Fullscreen</button>
+            <script>
+                (function () {
+                    const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                })();
+
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'SET_THEME') {
+                        document.documentElement.setAttribute('data-theme', event.data.theme);
+                    }
+                });
+            </script>
+    </body>
+
+</html>

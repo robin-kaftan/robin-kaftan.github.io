@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <link rel="stylesheet" href="style.css">
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                overflow-y: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div style="grid-column: 1 / -1; padding: 0.25rem;">
+            <h1>Games</h1>
+            <p>They're educational, I swear!</p><br>
+            <input class="search-input" id="searchInput" type="text" placeholder="Search Name...">
+            <hr>
+            <div class="container" id="gameContainer">
+                <button onclick="window.location.href='./Games/Minecraft8/index.html'">
+                    <img class="gameImage" src="./Resources/eag.png"><br>
+                    Minecraft 1.8
+                </button>
+                <button onclick="window.location.href='./Games/Minecraft12/index.html'">
+                    <img class="gameImage" src="./Resources/eag.png"><br>
+                    Minecraft 1.12
+                </button>
+            </div>
+
+            <script>
+                const searchInput = document.getElementById('searchInput');
+                const gameButtons = document.querySelectorAll('#gameContainer .game-card');
+
+                searchInput.addEventListener('input', () => {
+                    const query = searchInput.value.toLowerCase().trim();
+
+                    gameButtons.forEach(button => {
+                        const gameName = button.textContent.toLowerCase();
+                        const matches = gameName.includes(query);
+
+                        // Toggle visibility based on matching text
+                        button.style.display = matches ? 'inline-block' : 'none';
+                    });
+                });
+            </script>
+        </div>
+
+        <script>
+            (function () {
+                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            })();
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SET_THEME') {
+                    document.documentElement.setAttribute('data-theme', event.data.theme);
+                }
+            });
+        </script>
+    </body>
+
+</html>
