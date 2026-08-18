@@ -20,13 +20,11 @@
             <input class="search-input" id="searchInput" type="text" placeholder="Search Name...">
             <hr>
             <div class="container" id="gameContainer">
-                <button lass="game-card" onclick="window.location.href='./Games/Minecraft8/index.html'">
-                    <img class="gameImage" src="./Resources/eag.png"><br>
-                    Minecraft 1.8
+                <button class="game-card" onclick="window.location.href='./Games/Minecraft8/index.html'">
+                    <img class="gameImage" src="./Resources/eag.png"><br> Minecraft 1.8
                 </button>
                 <button class="game-card" onclick="window.location.href='./Games/Minecraft12/index.html'">
-                    <img class="gameImage" src="./Resources/eag.png"><br>
-                    Minecraft 1.12
+                    <img class="gameImage" src="./Resources/eag.png"><br> Minecraft 1.12
                 </button>
             </div>
 
@@ -38,14 +36,16 @@
                     const query = searchInput.value.toLowerCase().trim();
 
                     gameButtons.forEach(button => {
-                        const gameName = button.textContent.toLowerCase();
-                        const matches = gameName.includes(query);
+                        // Use innerText or target specific text nodes to avoid grabbing unwanted element text
+                        const gameText = button.innerText.toLowerCase();
+                        const matches = gameText.includes(query);
 
-                        // Toggle visibility based on matching text
-                        button.style.display = matches ? 'inline-block' : 'none';
+                        // Use '' to respect original CSS display style instead of forcing inline-block
+                        button.style.display = matches ? '' : 'none';
                     });
                 });
             </script>
+
         </div>
 
         <script>
