@@ -331,6 +331,7 @@ select {
     width: 100px;
     height: 100px;
     image-rendering: auto;
+    background: transparent;
 }
 
 .gameFrame {
