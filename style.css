@@ -338,7 +338,8 @@ select {
     aspect-ratio: 16 / 9;
     border: none;
     background: var(--bg-panel);
-    border-radius: var(--border-rad)
+    border-radius: var(--border-rad);
+    border: var(--border-size) solid var(--bg-border);
 }
 
 .left-nav-entry {
