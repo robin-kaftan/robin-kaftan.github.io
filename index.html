@@ -21,10 +21,10 @@
                     <option value="bad">Don't Select This One</option>
                 </select>
             </div>
-            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="home.html" target="target-display" onclick="hideIframe()"><img class="emoji" src="./Resources/home.png"><span class="nav-text">Home</span></a>
-            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="assignments.html" target="target-display" onclick="hideIframe()"><img class="emoji" src="./Resources/projects.png"><span class="nav-text">Assignments</span></a>
-            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="projects.html" target="target-display" onclick="hideIframe()"><img class="emoji" src="./Resources/assignments.png"><span class="nav-text">Projects</span></a>
-            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="games.html" target="target-display" onclick="hideIframe()"><img class="emoji" src="./Resources/games.png"><span class="nav-text">Games</span></a>
+            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="home.html" target="target-display"><img class="emoji" src="./Resources/home.png"><span class="nav-text">Home</span></a>
+            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="assignments.html" target="target-display"><img class="emoji" src="./Resources/projects.png"><span class="nav-text">Assignments</span></a>
+            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="projects.html" target="target-display"><img class="emoji" src="./Resources/assignments.png"><span class="nav-text">Projects</span></a>
+            <a onmousemove="tilt(event, this)" onmouseleave="resetTilt(this)" class="left-nav-entry" href="games.html" target="target-display"><img class="emoji" src="./Resources/games.png"><span class="nav-text">Games</span></a>
         </div>
 
         <div class="iframe-container">
@@ -34,44 +34,71 @@
         <div class="right-news">
             <div class="news-entry">
                 <p class="news-desc">
-                    5/08/26<br>DigiTech assignment avaliable at the Assignments page. <a class="hyperlink"
-                        href="assignments.html" target="target-display" onclick="hideIframe()">Go to it?</a>
+                    5/08/26<br>DigiTech assignment available at the Assignments page. <a class="hyperlink"
+                        href="assignments.html" target="target-display">Go to it?</a>
                 </p>
             </div>
         </div>
-        <script>function tilt(e, el, z = 25) { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 2 - 1, y = (e.clientY - r.top) / r.height * 2 - 1; if (el.parentElement && window.getComputedStyle(el.parentElement).transformStyle !== 'preserve-3d') el.parentElement.style.transformStyle = 'preserve-3d'; el.style.willChange = 'transform,filter'; el.style.backfaceVisibility = 'hidden'; el.style.transform = `perspective(1000px) scale(1.02) rotateX(${-y * 12}deg) rotateY(${x * 12}deg) translateZ(${z}px) translate3d(0,0,0)`; el.style.filter = 'drop-shadow(0px 12px 24px rgba(0,0,0,0.05))'; el.style.transition = 'transform 0.3s cubic-bezier(0.25,1,0.5,1),filter 0.3s cubic-bezier(0.25,1,0.5,1)'; } function resetTilt(el) { el.style.transform = 'perspective(1000px) scale(1) rotateX(0deg) rotateY(0deg) translateZ(0px) translate3d(0,0,0)'; el.style.filter = 'drop-shadow(0px 2px 4px rgba(0,0,0,0.05))'; el.style.transition = 'transform 0.4s cubic-bezier(0.25,1,0.5,1),filter 0.4s cubic-bezier(0.25,1,0.5,1)'; setTimeout(() => { if (el.style.transform.includes('scale(1)')) { el.style.willChange = 'auto'; } }, 400); }</script>
 
+        <!-- NAVIGATION TILT SCRIPT -->
         <script>
-            const selector = document.getElementById('theme-selector');
-            const iframe = document.getElementById('portfolio-iframe');
-
-            function hideIframe() {
-                iframe.style.opacity = '0';
+            function tilt(e, el, z = 25) { 
+                const r = el.getBoundingClientRect(), 
+                x = (e.clientX - r.left) / r.width * 2 - 1, 
+                y = (e.clientY - r.top) / r.height * 2 - 1; 
+                if (el.parentElement && window.getComputedStyle(el.parentElement).transformStyle !== 'preserve-3d') el.parentElement.style.transformStyle = 'preserve-3d'; 
+                el.style.willChange = 'transform,filter'; 
+                el.style.backfaceVisibility = 'hidden'; 
+                el.style.transform = `perspective(1000px) scale(1.02) rotateX(${-y * 12}deg) rotateY(${x * 12}deg) translateZ(${z}px) translate3d(0,0,0)`; 
+                el.style.filter = 'drop-shadow(0px 12px 24px rgba(0,0,0,0.05))'; 
+                el.style.transition = 'transform 0.3s cubic-bezier(0.25,1,0.5,1),filter 0.3s cubic-bezier(0.25,1,0.5,1)'; 
+            } 
+            function resetTilt(el) { 
+                el.style.transform = 'perspective(1000px) scale(1) rotateX(0deg) rotateY(0deg) translateZ(0px) translate3d(0,0,0)'; 
+                el.style.filter = 'drop-shadow(0px 2px 4px rgba(0,0,0,0.05))'; 
+                el.style.transition = 'transform 0.4s cubic-bezier(0.25,1,0.5,1),filter 0.4s cubic-bezier(0.25,1,0.5,1)'; 
+                setTimeout(() => { if (el.style.transform.includes('scale(1)')) { el.style.willChange = 'auto'; } }, 400); 
             }
+        </script>
 
-            function applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                selector.value = theme;
-                localStorage.setItem('portfolio-theme', theme);
+        <!-- THEME & IFRAME CONTROLLER SCRIPT -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const selector = document.getElementById('theme-selector');
+                const iframe = document.getElementById('portfolio-iframe');
 
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+                function applyTheme(theme) {
+                    document.documentElement.setAttribute('data-theme', theme);
+                    if (selector) selector.value = theme;
+                    localStorage.setItem('portfolio-theme', theme);
+
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+                    }
                 }
-            }
 
-            const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
-            applyTheme(savedTheme);
+                if (selector) {
+                    selector.addEventListener('change', (e) => {
+                        applyTheme(e.target.value);
+                    });
+                }
 
-            iframe.addEventListener('load', () => {
-                const currentTheme = localStorage.getItem('portfolio-theme') || 'light';
-                applyTheme(currentTheme);
+                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                applyTheme(savedTheme);
 
-                setTimeout(() => {
-                    iframe.style.opacity = '1';
-                }, 10);
+                if (iframe) {
+                    iframe.addEventListener('load', () => {
+                        const currentTheme = localStorage.getItem('portfolio-theme') || 'light';
+                        applyTheme(currentTheme);
+                        setTimeout(() => {
+                            iframe.style.opacity = '1';
+                        }, 10);
+                    });
+                }
             });
         </script>
 
+        <!-- TYPING TAB TITLE ANIMATION SCRIPT -->
         <script>
             const config = {
                 phrases: [
@@ -135,7 +162,6 @@
 
                     if (Math.random() < config.typoChance && i < fullPhrase.length - 1) {
                         const wrongChar = getTypoCharacter(fullPhrase[i]);
-
                         currentText += wrongChar;
                         showCursor = true;
                         updateTabTitle();
@@ -157,31 +183,26 @@
                 }
 
                 await new Promise(resolve => setTimeout(resolve, config.holdTime));
-                await erasePhrase();
+                await backspacePhrase();
             }
 
-            async function erasePhrase() {
+            async function backspacePhrase() {
                 while (currentText.length > 0) {
                     isTypingActive = false;
                     currentText = currentText.slice(0, -1);
                     showCursor = true;
                     updateTabTitle();
+                    
+                    isTypingActive = true;
                     await new Promise(resolve => setTimeout(resolve, config.backspaceSpeed));
                 }
 
-                isTypingActive = true;
                 phraseIndex = (phraseIndex + 1) % config.phrases.length;
-                await typePhrase();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                typePhrase();
             }
 
-            window.addEventListener("DOMContentLoaded", () => {
-                if (config.phrases.length > 0) {
-                    typePhrase();
-                }
-            });
+            typePhrase();
         </script>
-
-        <script>function squishNavText() { document.querySelectorAll('.left-nav-entry').forEach(e => { const i = e.querySelector('.emoji'), t = e.querySelector('.nav-text'); if (!t || !i) return; t.style.transform = 'scaleX(1)'; const p = e.parentElement.getBoundingClientRect().width, a = p - i.getBoundingClientRect().width - 24, s = t.scrollWidth; if (s > a && a > 0) { t.style.transform = `scaleX(${a / s})` } }) } window.addEventListener('load', squishNavText); window.addEventListener('resize', squishNavText); if (document.fonts) { document.fonts.ready.then(squishNavText); }</script>
     </body>
-
 </html>
