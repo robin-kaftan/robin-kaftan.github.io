@@ -532,6 +532,25 @@ hr {
     font-family: '8BitOperator';
 }
 
+.rainbow {
+    background: repeating-linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet, red 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow-text 2s linear infinite;
+}
+
+@keyframes rainbow-text {
+    0% {
+        background-position: 0% center;
+    }
+    100% {
+        background-position: -200% center;
+    }
+}
+
+
 @media (max-width: 1000px) {
     body {
         display: block;
