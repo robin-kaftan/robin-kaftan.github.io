@@ -16,9 +16,32 @@
     <body>
         <div style="grid-column: 1 / -1; padding: 0.25rem;">
             <h1>Assignments</h1>
-            <button onclick="window.open('./ResterauntWebsiteAssignment/index.html', '_blank');">open resteraunt
-                website</button><br>
+            <p>Mostly Digitech, I presume.</p><br>
+            <input class="search-input" id="searchInput" type="text" placeholder="Search Name...">
+            <hr>
+            <div class="container" id="gameContainer">
+                <button class="game-card" onclick="window.open('./ResterauntWebsiteAssignment/index.html', '_blank');">
+                    <img class="gameImage" src="./Resources/resterauntlogo.png"><br> Digitech Resteraunt<br>Website
+                </button>
+            </div>
+
+            <script>
+                const searchInput = document.getElementById('searchInput');
+                const gameButtons = document.querySelectorAll('#gameContainer .game-card');
+
+                searchInput.addEventListener('input', () => {
+                    const query = searchInput.value.toLowerCase().trim();
+
+                    gameButtons.forEach(button => {
+                        const gameText = button.innerText.toLowerCase();
+                        const matches = gameText.includes(query);
+                        button.style.display = matches ? '' : 'none';
+                    });
+                });
+            </script>
+
         </div>
+
         <script>
             (function () {
                 const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
