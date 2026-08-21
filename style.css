@@ -16,7 +16,7 @@
 
 :root,
 :root[data-theme="light"] {
-    --bg-main: #cec69d;
+    --bg-main: #eee6bd;
     --bg-mainborder: #cec69d;
     --bg-neg: #010101;
     --bg-panel: #fdf6cf;
