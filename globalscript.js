@@ -1,0 +1,1 @@
+document.querySelectorAll('.deltarune-wavy').forEach(c => { const t = c.dataset.text || c.textContent; c.textContent = ''; [...t].forEach((ch, i) => { const s = document.createElement('span'); s.textContent = ch === ' ' ? '\u00A0' : ch; s.style = `--i:${i}`; c.appendChild(s); }); });

@@ -165,6 +165,40 @@
     --bezier: cubic-bezier(0, 0.25, 0.5, 0.75, 1);
 }
 
+:root[data-theme="scary"] {
+    --bg-main: #723700;
+    --bg-mainborder: #db990b;
+    --bg-neg: #b3873d;
+    --bg-panel: #723700;
+    --bg-hover: #4e3002;
+    --bg-border: #db990b;
+    --text-main: #ffd900;
+    --text-hyp: #ffbb00;
+    --btnbor-hover: #ffcf87;
+    --navbtn-hover: #ffcf87;
+    --border-rad: 1.1rem;
+    --font: 'Plus Jakarta Sans';
+    --border-size: 0.25rem;
+    --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
+}
+
+:root[data-theme="jolly"] {
+    --bg-main: linear-gradient(to left, #eeffe4, #ffffff, #ffefef);
+    --bg-mainborder: #ff0000;
+    --bg-neg: #ff0000;
+    --bg-panel: #f7fff2;
+    --bg-hover: #9eff95;
+    --bg-border: #15ff00;
+    --text-main: #3d0000;
+    --text-hyp: #ff0000;
+    --btnbor-hover: #ff0000;
+    --navbtn-hover: #ff0000;
+    --border-rad: 1.1rem;
+    --font: 'Plus Jakarta Sans';
+    --border-size: 0.25rem;
+    --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
+}
+
 html,
 body {
     margin: 0;
@@ -556,6 +590,27 @@ hr {
     }
 }
 
+.deltarune-wavy {
+    display: inline-flex;
+    white-space: pre;
+}
+
+.deltarune-wavy span {
+    display: inline-block;
+    font-size: 1rem;
+    animation: deltaruneWave 0.6s ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * 0.06s);
+}
+
+@keyframes deltaruneWave {
+    0% {
+        transform: translateY(2px);
+    }
+
+    100% {
+        transform: translateY(-2px);
+    }
+}
 
 @media (max-width: 1000px) {
     body {

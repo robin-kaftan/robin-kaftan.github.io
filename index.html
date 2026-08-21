@@ -17,6 +17,8 @@
         <div class="left-nav">
             <div class="theme-selector-container">
                 <select id="theme-selector">
+                    <option id="halloweenTheme" value="scary" disabled hidden>Halloween</option>
+                    <option id="christmas" value="jolly" disabled hidden>Christmas</option>
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                     <option value="soulless">White</option>
@@ -43,6 +45,12 @@
                     5/08/26<br>DigiTech assignment available at the Assignments page. <a class="hyperlink" href="assignments.html" target="target-display">Go to it?</a>
                 </p>
             </div>
+            <div class="news-entry">
+                <p class="news-desc">
+                    8/21/26<br>New <span class="deltarune-wavy" data-text="SEASONAL">SEASONAL</span> themes have been added!
+                </p>
+            </div>
+
         </div>
 
         <script>
@@ -57,6 +65,10 @@
             const config = { phrases: ["My Portfolio", "Robin's Portfolio", "Cool Portfolio", "Robin's Website", "My Portfolio Site", "Sandysite"], minTypeSpeed: 50, maxTypeSpeed: 250, backspaceSpeed: 75, holdTime: 2500, typoChance: .1, typoHoldTime: 300, cursorBlinkSpeed: 500, cursorChar: "│" }; const nearbyKeys = { a: "qwsz", b: "vghn", c: "xdfv", d: "ersfxc", e: "wsdr", f: "rtgvcd", g: "tyhbvf", h: "yujnbg", i: "ujko", j: "uikmnh", k: "ijlm", l: "okp", m: "njk", n: "bhjm", o: "iklp", p: "ol", q: "wa", r: "edft", s: "wedvza", t: "rfgy", u: "yhji", v: "cfgb", w: "qase", x: "zsdc", y: "tghu", z: "asx" }; let phraseIndex = 0, currentText = "", showCursor = !0; const updateTitle = () => { let e = currentText; showCursor && (e += config.cursorChar), document.title = e.trim() || config.cursorChar || "\u00A0" }; setInterval(() => { showCursor = !showCursor, updateTitle() }, config.cursorBlinkSpeed); const getRandomDelay = (e, t) => Math.floor(Math.random() * (t - e + 1)) + e; function getTypoCharacter(e) { const t = e.toLowerCase(); return nearbyKeys[t] ? nearbyKeys[t][Math.floor(Math.random() * nearbyKeys[t].length)] : String.fromCharCode(e.charCodeAt(0) + 1) } async function startTypingSystem() { const e = t => new Promise(e => setTimeout(e, t)); while (!0) { const t = config.phrases[phraseIndex]; for (let r = 0; r <= t.length; r++) { if (r < t.length && Math.random() < config.typoChance) { const o = getTypoCharacter(t[r]); currentText = t.slice(0, r) + o, updateTitle(), await e(config.typoHoldTime) } currentText = t.slice(0, r), updateTitle(), await e(getRandomDelay(config.minTypeSpeed, config.maxTypeSpeed)) } await e(config.holdTime); for (let r = t.length; r >= 0; r--)currentText = t.slice(0, r), updateTitle(), await e(config.backspaceSpeed); phraseIndex = (phraseIndex + 1) % config.phrases.length, await e(500) } } startTypingSystem();
         </script>
 
+        <script>new Date().getMonth() === 9 && (e = document.getElementById("halloweenTheme"), e.removeAttribute("disabled"), e.removeAttribute("hidden"));</script>
+        <script>new Date().getMonth() === 11 && (e = document.getElementById("christmas"), e.removeAttribute("disabled"), e.removeAttribute("hidden"));</script>
+
+        <script src="globalscript.js"></script>
     </body>
 
 </html>
