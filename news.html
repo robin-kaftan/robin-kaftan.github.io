@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>My Portfolio</title>
+        <link rel="stylesheet" href="style.css">
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                overflow-y: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div style="grid-column: 1 / -1; padding: 0.25rem;">
+            <h1>Changelogs</h1>
+            <hr>
+            <h1>8/21/26</h1>
+            <p>
+                Added seasonal themes! They will be avaliable for selection in October and December.<br>
+                In other smaller news, I added the ability to make <span class="deltarune-wavy" data-text="wavy">wavy</span> text.
+            </p>
+            <hr>
+        </div>
+
+        <script>
+            (function () {
+                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            })();
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SET_THEME') {
+                    document.documentElement.setAttribute('data-theme', event.data.theme);
+                }
+            });
+        </script>
+
+        <script src="globalscript.js"></script>
+    </body>
+</html>
