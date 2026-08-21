@@ -539,12 +539,18 @@ hr {
     background-clip: text;
     color: transparent;
     animation: rainbow-text 2s linear infinite;
+    transition: 0.2s var(--bezier) all;
+}
+
+.rainbow:hover {
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.6));
 }
 
 @keyframes rainbow-text {
     0% {
         background-position: 0% center;
     }
+
     100% {
         background-position: -200% center;
     }
