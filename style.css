@@ -602,6 +602,20 @@ hr {
     animation-delay: calc(var(--i) * 0.06s);
 }
 
+p {
+    font-size: 1.2rem;
+}
+
+.speak-btn {
+    width: 1.2rem;
+    height: 1.2rem;
+    line-height: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
 @keyframes deltaruneWave {
     0% {
         transform: translateY(2px);
