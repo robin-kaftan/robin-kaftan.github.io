@@ -24,34 +24,14 @@
                 overflow-y: auto;
             }
         </style>
-        <script>
-            (function () {
-                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            })();
-
-            // Hide body to prevent flash, reveal when DOM is ready
-            document.addEventListener('DOMContentLoaded', () => {
-                document.body.style.visibility = 'visible';
-            });
-
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SET_THEME') {
-                    document.documentElement.setAttribute('data-theme', event.data.theme);
-                    localStorage.setItem('portfolio-theme', event.data.theme);
-                }
-            });
-        </script>
         <style>
             body {
                 visibility: hidden;
             }
         </style>
         <link rel="preconnect" href="https://googleapis.com">
-        <link rel="preconnect" href="https://gstatic.com" crossorigin>
-        <link href="https://cdnfonts.com" rel="stylesheet">
-        <link href="https://googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-        <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
         <style>
             @font-face {
                 font-family: '8BitOperator';
