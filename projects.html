@@ -25,8 +25,6 @@
         </style>
         <link rel="preconnect" href="https://googleapis.com">
         <link rel="preconnect" href="https://gstatic.com" crossorigin>
-        <link rel="preload" href="./Fonts/8bitOperatorPlus-Regular.ttf" as="font" type="font/ttf" crossorigin>
-        <link rel="preload" href="./Fonts/8bitOperatorPlus-Bold.ttf" as="font" type="font/ttf" crossorigin>
         <link href="https://cdnfonts.com" rel="stylesheet">
         <link href="https://googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
         <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
@@ -49,7 +47,8 @@
                 visibility: hidden;
             }
         </style>
-        <script>(function () { const s = localStorage.getItem('portfolio-theme') || 'light'; document.documentElement.setAttribute('data-theme', s); })(); Promise.all([new Promise(r => document.addEventListener('DOMContentLoaded', r)), document.fonts.ready]).then(() => { document.body.style.visibility = 'visible'; }); window.addEventListener('message', e => { if (e.data && e.data.type === 'SET_THEME') { document.documentElement.setAttribute('data-theme', e.data.theme); localStorage.setItem('portfolio-theme', e.data.theme); } });</script>
+        <script>let themeResolved; const themePromise = new Promise(r => { themeResolved = r; }); Promise.all([new Promise(r => document.addEventListener('DOMContentLoaded', r)), document.fonts.ready, themePromise]).then(() => { document.body.style.visibility = 'visible'; }); window.addEventListener('message', e => { if (e.data && e.data.type === 'SET_THEME') { document.documentElement.setAttribute('data-theme', e.data.theme); themeResolved(); } }); window.parent.postMessage({ type: 'REQUEST_THEME' }, '*');</script>
+
     </head>
 
     <body>

@@ -82,6 +82,24 @@
         <script>new Date().getMonth() === 11 && (e = document.getElementById("christmas"), e.removeAttribute("disabled"), e.removeAttribute("hidden"));</script>
 
         <script src="globalscript.js"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const selector = document.getElementById('theme-selector');
+                const iframe = document.getElementById('portfolio-iframe');
+                selector.addEventListener('change', () => {
+                    document.documentElement.setAttribute('data-theme', selector.value);
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: selector.value }, '*');
+                    }
+                });
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'REQUEST_THEME') {
+                        event.source.postMessage({ type: 'SET_THEME', theme: selector.value }, event.origin);
+                    }
+                });
+            });
+        </script>
     </body>
 
 </html>
