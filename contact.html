@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>My Portfolio</title>
+        <link rel="stylesheet" href="style.css">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="theme-color" content="#ffffff" id="theme-meta">
+
+        <meta property="og:title" content="Robin's Portfolio">
+        <meta property="og:description" content="Full of everything I make, love and use. (There are games.)">
+        <meta property="og:image" content="https://robin-kaftan.github.io/Resources/thumb.png">
+        <meta property="og:url" content="https://robin-kaftan.github.io/">
+        <meta property="og:type" content="website">
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                overflow-y: auto;
+            }
+        </style>
+        <style>
+            body {
+                visibility: hidden;
+            }
+        </style>
+        <link rel="preconnect" href="https://googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+        <style>
+            @font-face {
+                font-family: '8BitOperator';
+                font-weight: bold;
+                font-display: block;
+                src: url('./Fonts/8bitOperatorPlus-Bold.ttf') format('truetype');
+            }
+
+            @font-face {
+                font-family: '8BitOperator';
+                font-weight: normal;
+                font-display: block;
+                src: url('./Fonts/8bitOperatorPlus-Regular.ttf') format('truetype');
+            }
+
+            body {
+                visibility: hidden;
+            }
+        </style>
+        <script>let themeResolved; const themePromise = new Promise(r => { themeResolved = r; }); Promise.all([new Promise(r => document.addEventListener('DOMContentLoaded', r)), document.fonts.ready, themePromise]).then(() => { document.body.style.visibility = 'visible'; }); window.addEventListener('message', e => { if (e.data && e.data.type === 'SET_THEME') { document.documentElement.setAttribute('data-theme', e.data.theme); themeResolved(); } }); window.parent.postMessage({ type: 'REQUEST_THEME' }, '*');</script>
+    </head>
+
+    <body>
+        <div style="grid-column: 1 / -1; padding: 0.25rem;">
+            <h1>Contact</h1>
+            <p>
+                Use this page to submit a google form.
+            </p>
+
+            <iframe id="gameframe" class="gameFrame" src="https://docs.google.com/forms/d/e/1FAIpQLSdUQ8UVWc719bBKJDL09XOIiJSF6I4AJQybn472OW-rxLc1SA/viewform?usp=header"></iframe>
+            <button onclick="document.getElementById('gameframe').requestFullscreen()">Fullscreen</button>
+        </div>
+
+        <script>
+            (function () {
+                const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            })();
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SET_THEME') {
+                    document.documentElement.setAttribute('data-theme', event.data.theme);
+                }
+            });
+        </script>
+
+        <script src="globalscript.js"></script>
+    </body>
+
+
+</html>
