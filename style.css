@@ -16,6 +16,7 @@
 
 :root,
 :root[data-theme="light"] {
+    font-size: 16px;
     --bg-main: #eee6bd;
     --bg-mainborder: #cec69d;
     --bg-neg: #010101;
@@ -35,6 +36,7 @@
 }
 
 :root[data-theme="dark"] {
+    font-size: 16px;
     --bg-main: #3b361e;
     --bg-mainborder: #3b361e;
     --bg-neg: #f9f9f9;
@@ -54,6 +56,7 @@
 }
 
 :root[data-theme="soulless"] {
+    font-size: 16px;
     --bg-main: #fafafa;
     --bg-mainborder: #fafafa;
     --bg-neg: #010101;
@@ -73,6 +76,7 @@
 }
 
 :root[data-theme="black"] {
+    font-size: 16px;
     --bg-main: #060606;
     --bg-mainborder: #060606;
     --bg-neg: #f9f9f9;
@@ -92,6 +96,7 @@
 }
 
 :root[data-theme="lgreen"] {
+    font-size: 16px;
     --bg-main: #a0dda4;
     --bg-mainborder: #a0dda4;
     --bg-neg: #002b02;
@@ -111,6 +116,7 @@
 }
 
 :root[data-theme="green"] {
+    font-size: 16px;
     --bg-main: #37833c;
     --bg-mainborder: #37833c;
     --bg-neg: #cff0d1;
@@ -128,6 +134,7 @@
 }
 
 :root[data-theme="bad"] {
+    font-size: 16px;
     --bg-main: #ff0000;
     --bg-mainborder: #ff0000;
     --bg-neg: #cff0d1;
@@ -147,6 +154,7 @@
 }
 
 :root[data-theme="tfx"] {
+    font-size: 16px;
     --bg-main: #000000;
     --bg-mainborder: #ffffff;
     --bg-neg: #ffffff;
@@ -166,6 +174,7 @@
 }
 
 :root[data-theme="scary"] {
+    font-size: 16px;
     --bg-main: #723700;
     --bg-mainborder: #db990b;
     --bg-neg: #b3873d;
@@ -183,6 +192,7 @@
 }
 
 :root[data-theme="jolly"] {
+    font-size: 16px;
     --bg-main: linear-gradient(to left, #eeffe4, #ffffff, #ffefef);
     --bg-mainborder: #ff0000;
     --bg-neg: #ff0000;
@@ -410,7 +420,6 @@ select {
     transform-origin: left center;
 }
 
-
 .iframe-container {
     background: transparent;
     border-radius: var(--border-rad);
@@ -431,25 +440,6 @@ iframe.center-iframe {
     font-family: var(--font);
 }
 
-@media (max-width: 1000px) {
-    .iframe-container {
-        width: 100%;
-        height: 60vh;
-        margin: 1rem 0;
-        padding: 0;
-        border: var(--border-size) solid var(--bg-border);
-        overflow: hidden;
-    }
-
-    iframe.center-iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-}
-
 .right-news {
     font-family: var(--font);
     border-radius: var(--border-rad);
@@ -460,6 +450,111 @@ iframe.center-iframe {
     flex-direction: column;
     gap: 0.5rem;
     transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
+}
+
+@media (max-width: 1000px) {
+
+    :root,
+    :root[data-theme="light"],
+    :root[data-theme="dark"],
+    :root[data-theme="soulless"],
+    :root[data-theme="black"],
+    :root[data-theme="lgreen"],
+    :root[data-theme="green"],
+    :root[data-theme="bad"],
+    :root[data-theme="tfx"],
+    :root[data-theme="scary"],
+    :root[data-theme="jolly"] {
+        font-size: 13px;
+    }
+
+    body {
+        display: block;
+        height: auto;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .left-nav {
+        width: 100%;
+        height: auto;
+        min-height: 3.5rem;
+        box-sizing: border-box;
+        z-index: 10;
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .left-nav>* {
+        flex-shrink: 0;
+    }
+
+    .theme-selector-container {
+        margin-bottom: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    select#theme-selector {
+        width: auto;
+    }
+
+    .left-nav-entry {
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .left-nav-entry:hover,
+    .left-nav-entry:active {
+        transform: none;
+    }
+
+    .iframe-container {
+        width: 100%;
+        height: 60vh;
+        margin: 1rem 0;
+        padding: 0;
+        border: var(--border-size) solid var(--bg-border);
+        overflow: hidden;
+    }
+
+    iframe.center-iframe {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        height: 60vh;
+        max-height: 60vh;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .right-news {
+        width: 100%;
+        box-sizing: border-box;
+        height: auto;
+        min-height: 10rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        display: flex;
+        padding-top: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .right-news>* {
+        flex-shrink: 0;
+    }
 }
 
 button {
@@ -623,85 +718,5 @@ p {
 
     100% {
         transform: translateY(-1px);
-    }
-}
-
-@media (max-width: 1000px) {
-    body {
-        display: block;
-        height: auto;
-        overflow-y: auto;
-        padding: 1rem;
-    }
-
-    .left-nav {
-        width: 100%;
-        height: auto;
-        min-height: 3.5rem;
-        box-sizing: border-box;
-        z-index: 10;
-        display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .left-nav>* {
-        flex-shrink: 0;
-    }
-
-    .theme-selector-container {
-        margin-bottom: 0;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    select#theme-selector {
-        width: auto;
-    }
-
-    .left-nav-entry {
-        display: inline-block;
-        flex-shrink: 0;
-    }
-
-    .left-nav-entry:hover,
-    .left-nav-entry:active {
-        transform: none;
-    }
-
-    iframe.center-iframe {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-        height: 60vh;
-        max-height: 60vh;
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .right-news {
-        width: 100%;
-        box-sizing: border-box;
-        height: auto;
-        min-height: 10rem;
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .right-news>* {
-        flex-shrink: 0;
     }
 }
