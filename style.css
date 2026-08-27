@@ -32,6 +32,12 @@
     --inflate-size: 1.05;
     --deflate-size: 0.95;
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -52,6 +58,12 @@
     --inflate-size: 1.05;
     --deflate-size: 0.95;
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -72,6 +84,12 @@
     --deflate-size: 0.95;
     --font: 'Inter';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0, 0.25, 0.5, 1);
 }
 
@@ -92,6 +110,12 @@
     --deflate-size: 0.95;
     --font: 'Inter';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0, 0.25, 0.5, 1);
 }
 
@@ -112,6 +136,12 @@
     --deflate-size: 0.95;
     --font: 'Plus Jakarta Sans';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
 }
 
@@ -130,6 +160,12 @@
     --border-rad: 1.1rem;
     --font: 'Plus Jakarta Sans';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
 }
 
@@ -150,6 +186,8 @@
     --inflate-size: 1.65;
     --deflate-size: 0.1;
     --border-size: 1rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: 0;
     --bezier: cubic-bezier(0, 1, 0.1, 1.9);
 }
 
@@ -170,6 +208,8 @@
     --inflate-size: 1;
     --deflate-size: 1;
     --border-size: 0.3rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: 0;
     --bezier: cubic-bezier(0, 0.25, 0.5, 0.75, 1);
 }
 
@@ -188,6 +228,12 @@
     --border-rad: 1.1rem;
     --font: 'Plus Jakarta Sans';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
 }
 
@@ -206,6 +252,12 @@
     --border-rad: 1.1rem;
     --font: 'Plus Jakarta Sans';
     --border-size: 0.25rem;
+    --highlight-border-size: 1px;
+    --bg-hover-border-highlight: linear-gradient(165deg,
+            rgba(255, 255, 255, 0.85) 0%,
+            transparent 30%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.3) 100%);
     --bezier: cubic-bezier(0.1, 0.2, 0.5, 1);
 }
 
@@ -220,7 +272,7 @@ body {
     will-change: background-color, color;
     transition: background-color 0.3s ease, color 0.3s ease;
     scrollbar-color: var(--bg-mainborder) var(--bg-panel);
-    overflow: auto;
+    overflow: hidden;
 }
 
 *,
@@ -388,6 +440,7 @@ select {
 }
 
 .left-nav-entry {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     font-family: var(--font);
@@ -399,19 +452,29 @@ select {
     overflow: hidden;
     border-radius: var(--border-rad);
     text-decoration: none;
-    transition: transform 0.25s var(--bezier) all;
+    background: transparent;
+    border: var(--highlight-border-size) solid transparent;
+
+    transition:
+        transform 0.25s var(--bezier),
+        background 0.25s var(--bezier),
+        color 0.25s var(--bezier);
 }
 
 .left-nav-entry:hover {
-    background: var(--bg-hover);
     transform: scale(var(--inflate-size));
     color: var(--navbtn-hover);
+    background:
+        linear-gradient(var(--bg-hover), var(--bg-hover)) padding-box,
+        var(--bg-hover-border-highlight) border-box;
 }
 
 .left-nav-entry:active {
-    background: var(--bg-main);
     transform: scale(var(--deflate-size));
     color: var(--navbtn-hover);
+    background:
+        linear-gradient(var(--bg-main), var(--bg-main)) padding-box,
+        var(--bg-hover-border-highlight) border-box;
 }
 
 .nav-text {
