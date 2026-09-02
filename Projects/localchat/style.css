@@ -390,6 +390,9 @@ li {
     border: none;
     width: calc(100% - 251px);
     height: calc(100% - 81px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding-bottom: 20px;
 }
 
 .message {

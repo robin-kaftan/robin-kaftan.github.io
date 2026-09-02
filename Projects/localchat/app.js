@@ -7,7 +7,8 @@ let currentRoomInfo = { name: "", creator: "", password: "" };
 let heartbeatInterval = null;
 let currentRoomUsers = [];
 
-const MAX_FILE_SIZE_BYTES = 1024 * 1024 * 1024;
+// File limit updated to 25MB (25 * 1024 * 1024 bytes)
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const RATE_LIMIT_MS = 200;
 
 const SOUNDS = {
@@ -48,6 +49,12 @@ function sanitizeUsername(username) {
     return escapeHTML(username.trim()).slice(0, 25);
 }
 
+// Map a Room Name directly to a deterministic Peer ID for GitHub Pages compatibility
+function formatRoomPeerId(name) {
+    const cleanName = name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
+    return `localchat-room-${cleanName}`;
+}
+
 const navButtons = document.getElementById("navButtons");
 const homepageRedirect = document.getElementById("homepageRedirect");
 const settingsRedirect = document.getElementById("settingsRedirect");
@@ -68,6 +75,7 @@ const submitUsername = document.getElementById("submitUsername");
 const homepage = document.getElementById("homepage");
 const homepageRoomSearchBox = document.getElementById("homepageRoomSearchBox");
 const templateRoomCard = document.getElementById("templateRoomCard");
+const searchingForRoomsText = document.getElementById("searchingForRoomsText");
 const timeSpentSearching = document.getElementById("timeSpentSearching");
 
 const hostRoomSection = document.getElementById("hostRoom");
@@ -233,6 +241,7 @@ function initApp() {
         firstTimeWelcome.hidden = true;
         notFirstTimeWelcome.hidden = false;
         usernameInput.value = currentUser;
+        navButtons.style.display = "flex";
     }
     showSection(initialisationPage);
 }
@@ -253,11 +262,14 @@ submitUsername.addEventListener("click", async () => {
     navButtons.style.display = "flex";
     initPeer();
     showSection(homepage);
-    startRoomDiscovery();
 });
 
-function initPeer() {
-    peer = new Peer();
+function initPeer(customPeerId = null) {
+    if (peer) {
+        try { peer.destroy(); } catch(e) {}
+    }
+
+    peer = customPeerId ? new Peer(customPeerId) : new Peer();
 
     peer.on("connection", (conn) => {
         conn.lastMessageTime = 0;
@@ -268,8 +280,14 @@ function initPeer() {
         conn.on("error", () => handleClientDisconnect(conn));
     });
 
-    peer.on("error", () => {
+    peer.on("error", (err) => {
         playSFX(SOUNDS.connectFail);
+        if (err.type === "unavailable-id") {
+            showNotification({
+                title: "Room Taken",
+                text: "A room with this name is already active online."
+            });
+        }
     });
 }
 
@@ -286,8 +304,8 @@ hostRoomRedirect.addEventListener("click", () => {
 });
 
 submitRoomHost.addEventListener("click", async () => {
-    const name = escapeHTML(roomNameInput.value.trim()).slice(0, 30);
-    if (!name) {
+    const rawName = escapeHTML(roomNameInput.value.trim()).slice(0, 30);
+    if (!rawName) {
         await showNotification({
             title: "Validation Error",
             text: "Please enter a valid room name."
@@ -295,118 +313,125 @@ submitRoomHost.addEventListener("click", async () => {
         return;
     }
 
-    isHost = true;
-    currentRoomInfo = {
-        name: name,
-        creator: currentUser,
-        password: roomPasswordInput.value.trim()
-    };
+    const targetPeerId = formatRoomPeerId(rawName);
 
-    updateRoomHeartbeat();
-    heartbeatInterval = setInterval(updateRoomHeartbeat, 2000);
+    initPeer(targetPeerId);
 
-    setupRoomUI(currentRoomInfo.name, [currentUser]);
-    showSection(roomSection);
-    playSFX(SOUNDS.connectSuccess);
+    peer.on("open", () => {
+        isHost = true;
+        currentRoomInfo = {
+            name: rawName,
+            creator: currentUser,
+            password: roomPasswordInput.value.trim()
+        };
+
+        setupRoomUI(currentRoomInfo.name, [currentUser]);
+        showSection(roomSection);
+        playSFX(SOUNDS.connectSuccess);
+    });
 });
 
-function updateRoomHeartbeat() {
-    if (!isHost) return;
-    const roomData = {
-        peerId: peer.id,
-        name: currentRoomInfo.name,
-        creator: currentRoomInfo.creator,
-        hasPassword: !!currentRoomInfo.password,
-        lastSeen: Date.now()
-    };
-    localStorage.setItem(`localchat_room_${peer.id}`, JSON.stringify(roomData));
-}
+// -------------------------------------------------------------
+// PURE P2P DISCOVERY & CARD RENDERING VIA SEARCH BOX
+// -------------------------------------------------------------
+let searchDebounce = null;
+let searchTimerInterval = null;
+let searchSeconds = 0;
 
-function startRoomDiscovery() {
-    let seconds = 0;
-    setInterval(() => {
-        seconds++;
-        if (timeSpentSearching) timeSpentSearching.innerText = seconds;
-        
-        const now = Date.now();
-        const activeRoomIds = new Set();
+homepageRoomSearchBox.addEventListener("input", (e) => {
+    clearTimeout(searchDebounce);
+    clearInterval(searchTimerInterval);
+    
+    const query = e.target.value.trim();
 
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith("localchat_room_")) {
-                try {
-                    const room = JSON.parse(localStorage.getItem(key));
-                    if (now - room.lastSeen < 5000) {
-                        activeRoomIds.add(room.peerId);
-                        renderRoomCard(room);
-                    } else {
-                        localStorage.removeItem(key);
-                    }
-                } catch(e) {}
-            }
-        }
+    // Remove generated room cards from previous searches
+    const existingCards = homepage.querySelectorAll(".generated-room-card");
+    existingCards.forEach(card => card.remove());
 
-        const cards = document.querySelectorAll(".room-card");
-        cards.forEach(card => {
-            if (card.id === "templateRoomCard") return;
-            const peerId = card.id.replace("room-card-", "");
-            if (!activeRoomIds.has(peerId)) {
-                card.remove();
-            }
+    if (!query) {
+        if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+        return;
+    }
+
+    searchSeconds = 0;
+    if (timeSpentSearching) timeSpentSearching.innerText = "0";
+    if (searchingForRoomsText) searchingForRoomsText.hidden = false;
+
+    searchTimerInterval = setInterval(() => {
+        searchSeconds++;
+        if (timeSpentSearching) timeSpentSearching.innerText = searchSeconds;
+    }, 1000);
+
+    searchDebounce = setTimeout(() => {
+        performPeerSearch(query);
+    }, 400);
+});
+
+function performPeerSearch(roomName) {
+    const targetPeerId = formatRoomPeerId(roomName);
+    const tempPeer = new Peer();
+
+    tempPeer.on("open", () => {
+        const conn = tempPeer.connect(targetPeerId, { reliable: true });
+        let found = false;
+
+        conn.on("open", () => {
+            found = true;
+            clearInterval(searchTimerInterval);
+            if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+
+            // Ping host for room creator details & password status
+            conn.send({ type: "INFO_REQUEST" });
+
+            conn.on("data", (data) => {
+                if (data.type === "INFO_RESPONSE") {
+                    renderRoomCard(data.roomName, data.creator, data.hasPassword, targetPeerId);
+                    conn.close();
+                    tempPeer.destroy();
+                }
+            });
         });
 
-        filterRooms();
-    }, 1000);
+        setTimeout(() => {
+            if (!found) {
+                clearInterval(searchTimerInterval);
+                if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+                tempPeer.destroy();
+            }
+        }, 1800);
+    });
 }
 
-function renderRoomCard(room) {
-    let existingCard = document.getElementById(`room-card-${room.peerId}`);
-    if (existingCard) return;
+function renderRoomCard(roomName, creator, hasPassword, peerId) {
+    const existing = document.getElementById(`room-card-${peerId}`);
+    if (existing) return;
 
     const card = templateRoomCard.cloneNode(true);
-    card.id = `room-card-${room.peerId}`;
+    card.id = `room-card-${peerId}`;
+    card.classList.add("generated-room-card");
     card.hidden = false;
-    card.classList.add("fade-in");
 
-    card.querySelector("#roomTitle").innerText = room.name;
-    card.querySelector("#rooomCreator").innerText = room.creator;
+    card.querySelector("#roomTitle").innerText = roomName;
+    card.querySelector("#rooomCreator").innerText = creator;
     
     const pswdTag = card.querySelector("#roomPasswordRequired");
-    if (!room.hasPassword) {
+    if (!hasPassword && pswdTag) {
         pswdTag.style.display = "none";
     }
 
     const joinBtn = card.querySelector("#joinRoomButton");
-    joinBtn.addEventListener("click", () => joinRoom(room));
+    joinBtn.addEventListener("click", () => joinRoomByPeerId(peerId, roomName, hasPassword));
 
     homepage.appendChild(card);
-    filterRooms();
 }
 
-function filterRooms() {
-    const query = homepageRoomSearchBox.value.trim().toLowerCase();
-    const cards = document.querySelectorAll(".room-card");
-    
-    cards.forEach(card => {
-        if (card.id === "templateRoomCard") return;
-        const roomTitle = card.querySelector("#roomTitle").innerText.toLowerCase();
-        if (roomTitle.includes(query)) {
-            card.style.display = "block";
-        } else {
-            card.style.display = "none";
-        }
-    });
-}
-
-homepageRoomSearchBox.addEventListener("input", filterRooms);
-
-async function joinRoom(room) {
+async function joinRoomByPeerId(targetPeerId, roomName, checkPassword = false) {
     let inputPswd = "";
 
-    if (room.hasPassword) {
+    if (checkPassword) {
         inputPswd = await showNotification({
             title: "Protected Room",
-            text: `This room requires a password to join:`,
+            text: `Enter password for "${roomName}":`,
             showInput: true,
             placeholder: "Enter Password...",
             buttonText: "Join Room"
@@ -415,8 +440,8 @@ async function joinRoom(room) {
         if (inputPswd === null) return;
     }
 
-    currentRoomInfo = { name: room.name, creator: room.creator, password: inputPswd };
-    hostConnection = peer.connect(room.peerId);
+    currentRoomInfo = { name: roomName, creator: "", password: inputPswd };
+    hostConnection = peer.connect(targetPeerId);
     
     hostConnection.on("open", () => {
         hostConnection.send({ 
@@ -462,6 +487,17 @@ async function handleIncomingData(conn, data) {
         return;
     }
     conn.lastMessageTime = now;
+
+    // Discovery probe handling on host side
+    if (data.type === "INFO_REQUEST" && isHost) {
+        conn.send({
+            type: "INFO_RESPONSE",
+            roomName: currentRoomInfo.name,
+            creator: currentRoomInfo.creator,
+            hasPassword: !!currentRoomInfo.password
+        });
+        return;
+    }
 
     if (data.type === "JOIN") {
         if (isHost) {
@@ -599,8 +635,6 @@ function disbandRoom() {
         activeConnections.forEach(c => {
             if (c.authenticated) c.send({ type: "DISBAND" });
         });
-        localStorage.removeItem(`localchat_room_${peer.id}`);
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
     }
     cleanupRoomState();
     showSection(homepage);
@@ -615,10 +649,10 @@ function cleanupRoomState() {
     activeConnections = [];
     hostConnection = null;
     currentRoomUsers = [];
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
     messagesContainer.innerHTML = "";
     messagesContainer.appendChild(templateMessageEntry);
     if (inputHighlightOverlay) inputHighlightOverlay.innerHTML = "";
+    initPeer();
 }
 
 function broadcastUserList() {
@@ -673,10 +707,10 @@ hiddenFileInput.addEventListener("change", () => {
     if (!file) return;
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-        const maxGB = (MAX_FILE_SIZE_BYTES / (1024 * 1024 * 1024)).toFixed(0);
+        const maxMB = (MAX_FILE_SIZE_BYTES / (1024 * 1024)).toFixed(0);
         showNotification({
             title: "File Too Large",
-            text: `File size exceeds the maximum limit of ${maxGB}GB.`
+            text: `File size exceeds the maximum limit of ${maxMB}MB.`
         });
         hiddenFileInput.value = "";
         return;
