@@ -4,10 +4,9 @@ let activeConnections = [];
 let hostConnection = null;
 let isHost = false;
 let currentRoomInfo = { name: "", creator: "", password: "" };
-let heartbeatInterval = null;
 let currentRoomUsers = [];
 
-// File limit updated to 25MB (25 * 1024 * 1024 bytes)
+// File limit set to 25MB (25 * 1024 * 1024 bytes)
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const RATE_LIMIT_MS = 200;
 
@@ -264,12 +263,26 @@ submitUsername.addEventListener("click", async () => {
     showSection(homepage);
 });
 
+// STABILITY FIX 1: Explicit Peer Configuration & Event Handler Detachment
 function initPeer(customPeerId = null) {
     if (peer) {
-        try { peer.destroy(); } catch(e) {}
+        try { 
+            peer.off();
+            peer.destroy(); 
+        } catch(e) {}
     }
 
-    peer = customPeerId ? new Peer(customPeerId) : new Peer();
+    const peerOptions = {
+        debug: 1,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    };
+
+    peer = customPeerId ? new Peer(customPeerId, peerOptions) : new Peer(peerOptions);
 
     peer.on("connection", (conn) => {
         conn.lastMessageTime = 0;
@@ -367,12 +380,13 @@ homepageRoomSearchBox.addEventListener("input", (e) => {
     }, 400);
 });
 
+// STABILITY FIX 2: Lightweight connection probes and explicit socket teardown
 function performPeerSearch(roomName) {
     const targetPeerId = formatRoomPeerId(roomName);
     const tempPeer = new Peer();
 
     tempPeer.on("open", () => {
-        const conn = tempPeer.connect(targetPeerId, { reliable: true });
+        const conn = tempPeer.connect(targetPeerId, { reliable: false });
         let found = false;
 
         conn.on("open", () => {
@@ -380,14 +394,15 @@ function performPeerSearch(roomName) {
             clearInterval(searchTimerInterval);
             if (searchingForRoomsText) searchingForRoomsText.hidden = true;
 
-            // Ping host for room creator details & password status
             conn.send({ type: "INFO_REQUEST" });
 
             conn.on("data", (data) => {
                 if (data.type === "INFO_RESPONSE") {
                     renderRoomCard(data.roomName, data.creator, data.hasPassword, targetPeerId);
+                    
+                    // Disconnect socket cleanly before destroying temporary peer
                     conn.close();
-                    tempPeer.destroy();
+                    setTimeout(() => tempPeer.destroy(), 100);
                 }
             });
         });
