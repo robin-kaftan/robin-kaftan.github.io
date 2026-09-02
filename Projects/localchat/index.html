@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    </head>
+
+    <body>
+        <div class="topbar">
+            <div class="left-side-topbar">
+                <h1 class="logo"><span class="accent">local</span>chat</h1>
+            </div>
+            <div class="right-side-topbar" id="navButtons" style="display: none;">
+                <a class="nav-button" id="homepageRedirect">Home</a>
+                <a class="nav-button" id="settingsRedirect">Change Username</a>
+                <a class="nav-button" id="hostRoomRedirect">Host Room</a>
+            </div>
+        </div>
+
+        <div hidden class="notification" id="notificationFrame">
+            <div class="center-vertically-and-horizontally center-contents panel notification-div">
+                <h1>NotificationTitle</h1>
+                <p>NotificationText</p>
+                <input hidden class="text-input" id="notificationInput" type="text" placeholder="PlaceholderText">
+                <button class="text-input-submit" id="notificationButton">NotificationButton</button>
+            </div>
+        </div>
+
+        <section hidden id="initialisationPage">
+            <div class="center-vertically-and-horizontally panel">
+                <h1 id="firstTimeWelcome">Welcome!</h1>
+                <h1 hidden id="notFirstTimeWelcome">Welcome back!</h1>
+                <input class="text-input" id="usernameInput" type="text" maxlength="20" placeholder="Username"><br>
+                <button class="text-input-submit" id="submitUsername">Submit</button>
+            </div>
+        </section>
+
+        <section hidden id="homepage" style="text-align: center;">
+            <h1>Rooms on This Network</h1>
+            <hr>
+            <input type="text" maxlength="20" class="text-input" id="homepageRoomSearchBox" placeholder="Search Name...">
+            <p class="tertiary" id="searchingForRoomsText" hidden>Searching for rooms on your network... (<span hidden id="timeSpentSearching">0</span>s)</p>
+            <div class="room-card" id="templateRoomCard" hidden>
+                <h1 class="room-title copyable" id="roomTitle">OnlyTwentyCharacters</h1>
+                <h3 class="room-author">By: <span id="rooomCreator" class="copyable">OnlyTwentyCharacters</span></h3>
+                <span class="room-pswd-required" id="roomPasswordRequired">Password Required</span>
+                <button class="join-button" id="joinRoomButton">Join</button>
+            </div>
+        </section>
+
+        <section hidden id="hostRoom">
+            <div class="center-vertically-and-horizontally panel center-contents">
+                <h1>Hosting a Room</h1>
+                <input class="text-input" id="roomNameInput" type="text" maxlength="20" placeholder="Room Name"><br>
+                <input class="text-input" id="roomPasswordInput" type="text" maxlength="20" placeholder="Room Password (optional)"><br>
+                <button class="text-input-submit" id="submitRoomHost">Host</button>
+            </div>
+        </section>
+
+        <section hidden id="room">
+            <div class="room-sidebar center-contents">
+                <span id="room-name-display" class="tertiary">OnlyTwentyCharacters</span>
+                <h1>Users</h1>
+                <ul id="room-users-list">
+                </ul>
+            </div>
+            <div class="messages" id="messagesContainer">
+                <div hidden class="message" id="templateMessageEntry">
+                    <h3 class="message-sender" id="messageComposer">OnlyTwentyCharacters</h3>
+                    <p class="message-content" id="messageContent">This one has 400 character capacity, but I don't have an interesting composition of words that can reach that. Nothing like OnlyTwentyCharacters which is twenty characters.</p>
+                </div>
+            </div>
+            <div class="msgbox">
+                <input type="text" maxlength="400" id="messageInputBox" class="msg-input">
+                <button class="file-button" id="fileAddButton">⭱</button>
+                <button class="send-button" id="messageSendButton">▶</button>
+            </div>
+        </section>
+
+        <script src="app.js"></script>
+    </body>
+
+</html>

@@ -1,0 +1,445 @@
+@import url('https://fonts.cdnfonts.com/css/satoshi');
+
+:root {
+    --background: #f7efdd;
+    --panel: #fff8e8;
+    --stacked-panel: #f0daba;
+    --text-primary: #000000;
+    --text-secondary: #616161;
+    --text-tertiary: #878787;
+    --border: #e2d6c0;
+    --divider: #d6a679;
+    --accent: #d46600;
+    --accent-highlight: rgb(255, 168, 87);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #1f1204;
+        --panel: #382c1e;
+        --stacked-panel: #42392e;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --text-tertiary: #7a7a7a;
+        --border: #29221d;
+        --divider: #ffffff14;
+        --accent: #d260ff;
+        --accent-highlight: #e6a8ff;
+    }
+}
+
+* {
+    font-family: 'Satoshi';
+    user-select: none;
+    outline: none;
+}
+
+html,
+body {
+    background: var(--background);
+    position: relative;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.topbar {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    background: var(--background);
+    width: 100%;
+    height: 72px;
+    border-bottom: 1px var(--border) solid;
+    border-left: 1px var(--border) solid;
+    border-right: 1px var(--border) solid;
+}
+
+.left-side-topbar {
+    position: absolute;
+    left: 20px;
+    top: 0;
+    height: 100%;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.right-side-topbar {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    height: 100%;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.nav-button {
+    background: transparent;
+    margin: 0 10px;
+    padding: 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: 0.15s ease-in-out all;
+    color: var(--text-primary);
+}
+
+.nav-button:hover {
+    background: var(--panel);
+}
+
+.accent {
+    color: var(--accent);
+}
+
+section {
+    position: absolute;
+    top: 73px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--background);
+    border-left: 1px var(--border) solid;
+    border-right: 1px var(--border) solid;
+    width: 100%;
+    height: calc(100% - 73px);
+}
+
+.center-horizontally {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.center-vertically {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.center-vertically-and-horizontally {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.panel {
+    background: var(--panel);
+    padding: 12px;
+    border-radius: 16px;
+    width: fit-content;
+    height: fit-content;
+}
+
+h1 {
+    font-size: 2.25rem;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin: 6px;
+}
+
+.text-input {
+    color: var(--text-primary);
+    font-size: 1rem;
+    padding: 8px;
+    border: 1px var(--border) solid;
+    background: var(--background);
+    width: 250px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+}
+
+.text-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.text-input-submit {
+    color: var(--text-primary);
+    font-size: 1rem;
+    padding: 8px;
+    border: 1px var(--border) solid;
+    background: var(--background);
+    width: 268px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    transition: 150ms ease-in-out all;
+}
+
+.text-input-submit:hover {
+    background: var(--panel);
+}
+
+.text-input-submit:active {
+    background: var(--border);
+}
+
+.room-card {
+    position: relative;
+    background: var(--panel);
+    height: 250px;
+    width: calc(100% - 48px);
+    margin: 24px;
+    border-radius: 16px;
+    box-shadow: 0 14px 48px rgba(0, 0, 0, 0.1);
+}
+
+.room-title {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    height: 2.25rem;
+    font-size: 2.25rem;
+}
+
+.room-author {
+    position: absolute;
+    top: calc(8px + 2.25rem);
+    left: 16px;
+    height: 1.75rem;
+    font-size: 1.75rem;
+}
+
+.copyable {
+    user-select: all;
+    cursor: pointer;
+}
+
+::selection {
+    background: var(--accent-highlight)
+}
+
+.room-pswd-required {
+    color: #ff0000;
+    font-size: 1rem;
+    position: absolute;
+    text-align: right;
+    top: 8px;
+    right: 16px;
+}
+
+.join-button {
+    position: absolute;
+    border: none;
+    background: #62c762;
+    left: 8px;
+    bottom: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    color: #000000;
+    font-size: 1rem;
+    transition: 50ms ease-in-out all;
+}
+
+.join-button:hover {
+    background: #82d682;
+}
+
+.join-button:active {
+    background: #084108;
+}
+
+hr {
+    width: 100%;
+    border: none;
+    height: 1px;
+    background: var(--border);
+}
+
+.tertiary {
+    color: var(--text-tertiary);
+}
+
+.center-contents {
+    text-align: center;
+}
+
+.checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    background: var(--panel);
+    border: 1px var(--text-primary) solid;
+    cursor: pointer;
+    transition: 50ms ease-in-out all;
+}
+
+.checkbox:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkbox-info {
+    position: relative;
+    font-size: 1rem;
+    bottom: 8px;
+    margin-left: 4px;
+}
+
+.room-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 250px;
+    background: var(--background);
+    border-right: 1px var(--border) solid;
+}
+
+li {
+    text-align: left;
+    font-size: 1rem;
+}
+
+.msgbox {
+    position: absolute;
+    width: calc(100% - 250px);
+    height: 80px;
+    bottom: 0;
+    right: 0;
+    border-top: 1px var(--border) solid;
+    display: flex;
+    align-items: center;
+}
+
+#inputHighlightOverlay {
+    position: absolute;
+    pointer-events: none;
+    white-space: pre;
+    overflow: hidden;
+    color: transparent;
+    font: inherit;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+}
+
+.msg-input {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    width: calc(100% - 178px);
+    height: calc(100% - 32px);
+    margin: 8px;
+    font-size: 1rem;
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px var(--border) solid;
+    user-select: auto;
+}
+
+.send-button {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 64px;
+    height: 64px;
+    background: #62c762;
+    border: none;
+    border-radius: 16px;
+    font-size: 32px;
+    line-height: 0;
+    color: #ffffff;
+}
+
+.send-button:hover {
+    background: #82d682;
+}
+
+.send-button:active {
+    background: #084108;
+}
+
+.file-button {
+    position: absolute;
+    right: calc(64px + 16px);
+    top: 8px;
+    width: 64px;
+    height: 64px;
+    background: var(--panel);
+    border: none;
+    border-radius: 16px;
+    font-size: 32px;
+    line-height: 0;
+    color: var(--text-primary);
+}
+
+.file-button:hover {
+    background: var(--stacked-panel);
+}
+
+.file-button:active {
+    background: var(--border);
+}
+
+.messages {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--background);
+    border: none;
+    width: calc(100% - 251px);
+    height: calc(100% - 81px);
+}
+
+.message {
+    height: fit-content;
+    border-bottom: 1px var(--border) solid;
+    padding: 8px 12px;
+}
+
+.message-sender {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.message-content {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-top: 4px;
+}
+
+.notification {
+    background: rgba(0, 0, 0, 0.25);
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9998;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+}
+
+.notification:not([hidden]) {
+    opacity: 1;
+}
+
+.notification-div {
+    z-index: 9999;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+}
