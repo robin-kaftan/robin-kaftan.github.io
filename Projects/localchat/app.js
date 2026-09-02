@@ -48,7 +48,7 @@ function sanitizeUsername(username) {
     return escapeHTML(username.trim()).slice(0, 25);
 }
 
-// Map a Room Name directly to a deterministic Peer ID for GitHub Pages compatibility
+// Map a Room Name directly to a deterministic Peer ID
 function formatRoomPeerId(name) {
     const cleanName = name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
     return `localchat-room-${cleanName}`;
@@ -263,7 +263,6 @@ submitUsername.addEventListener("click", async () => {
     showSection(homepage);
 });
 
-// STABILITY FIX 1: Explicit Peer Configuration & Event Handler Detachment
 function initPeer(customPeerId = null) {
     if (peer) {
         try { 
@@ -345,11 +344,12 @@ submitRoomHost.addEventListener("click", async () => {
 });
 
 // -------------------------------------------------------------
-// PURE P2P DISCOVERY & CARD RENDERING VIA SEARCH BOX
+// ISOLATED SEARCH PROBING ARCHITECTURE
 // -------------------------------------------------------------
 let searchDebounce = null;
 let searchTimerInterval = null;
 let searchSeconds = 0;
+let activeSearchPeer = null;
 
 homepageRoomSearchBox.addEventListener("input", (e) => {
     clearTimeout(searchDebounce);
@@ -357,11 +357,16 @@ homepageRoomSearchBox.addEventListener("input", (e) => {
     
     const query = e.target.value.trim();
 
-    // Remove generated room cards from previous searches
     const existingCards = homepage.querySelectorAll(".generated-room-card");
     existingCards.forEach(card => card.remove());
 
     if (!query) {
+        if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+        return;
+    }
+
+    const targetPeerId = formatRoomPeerId(query);
+    if (peer && peer.id === targetPeerId) {
         if (searchingForRoomsText) searchingForRoomsText.hidden = true;
         return;
     }
@@ -375,45 +380,57 @@ homepageRoomSearchBox.addEventListener("input", (e) => {
         if (timeSpentSearching) timeSpentSearching.innerText = searchSeconds;
     }, 1000);
 
+    // 600ms Debounce to prevent signaling flood while typing
     searchDebounce = setTimeout(() => {
         performPeerSearch(query);
-    }, 400);
+    }, 600);
 });
 
-// STABILITY FIX 2: Lightweight connection probes and explicit socket teardown
 function performPeerSearch(roomName) {
     const targetPeerId = formatRoomPeerId(roomName);
-    const tempPeer = new Peer();
 
-    tempPeer.on("open", () => {
-        const conn = tempPeer.connect(targetPeerId, { reliable: false });
+    if (activeSearchPeer) {
+        try { activeSearchPeer.destroy(); } catch(e) {}
+    }
+
+    // Dedicated secondary peer instance for search probing
+    activeSearchPeer = new Peer({ debug: 0 });
+
+    activeSearchPeer.on("open", () => {
+        const conn = activeSearchPeer.connect(targetPeerId, { reliable: false });
         let found = false;
 
         conn.on("open", () => {
             found = true;
-            clearInterval(searchTimerInterval);
-            if (searchingForRoomsText) searchingForRoomsText.hidden = true;
-
             conn.send({ type: "INFO_REQUEST" });
+        });
 
-            conn.on("data", (data) => {
-                if (data.type === "INFO_RESPONSE") {
-                    renderRoomCard(data.roomName, data.creator, data.hasPassword, targetPeerId);
-                    
-                    // Disconnect socket cleanly before destroying temporary peer
-                    conn.close();
-                    setTimeout(() => tempPeer.destroy(), 100);
-                }
-            });
+        conn.on("data", (data) => {
+            if (data.type === "INFO_RESPONSE") {
+                clearInterval(searchTimerInterval);
+                if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+
+                renderRoomCard(data.roomName, data.creator, data.hasPassword, targetPeerId);
+
+                try { conn.close(); } catch(e){}
+                if (activeSearchPeer) activeSearchPeer.destroy();
+            }
         });
 
         setTimeout(() => {
             if (!found) {
                 clearInterval(searchTimerInterval);
                 if (searchingForRoomsText) searchingForRoomsText.hidden = true;
-                tempPeer.destroy();
+                try { conn.close(); } catch(e){}
+                if (activeSearchPeer) activeSearchPeer.destroy();
             }
-        }, 1800);
+        }, 1500);
+    });
+
+    activeSearchPeer.on("error", () => {
+        clearInterval(searchTimerInterval);
+        if (searchingForRoomsText) searchingForRoomsText.hidden = true;
+        if (activeSearchPeer) activeSearchPeer.destroy();
     });
 }
 
@@ -497,13 +514,7 @@ function formatMessageContent(rawText, sender) {
 async function handleIncomingData(conn, data) {
     if (!data || typeof data !== "object" || !data.type) return;
 
-    const now = Date.now();
-    if (conn.lastMessageTime && now - conn.lastMessageTime < RATE_LIMIT_MS) {
-        return;
-    }
-    conn.lastMessageTime = now;
-
-    // Discovery probe handling on host side
+    // HOST SIDE: Handle search probes quickly without socket pollution
     if (data.type === "INFO_REQUEST" && isHost) {
         conn.send({
             type: "INFO_RESPONSE",
@@ -511,8 +522,15 @@ async function handleIncomingData(conn, data) {
             creator: currentRoomInfo.creator,
             hasPassword: !!currentRoomInfo.password
         });
+        setTimeout(() => { try { conn.close(); } catch(e){} }, 100);
         return;
     }
+
+    const now = Date.now();
+    if (conn.lastMessageTime && now - conn.lastMessageTime < RATE_LIMIT_MS) {
+        return;
+    }
+    conn.lastMessageTime = now;
 
     if (data.type === "JOIN") {
         if (isHost) {
