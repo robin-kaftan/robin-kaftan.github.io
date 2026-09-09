@@ -515,111 +515,6 @@ iframe.center-iframe {
     transition: transform 0.2s var(--bezier), background-color 0.2s ease, color 0.3s ease, opacity 0.2s ease;
 }
 
-@media (max-width: 1000px) {
-
-    :root,
-    :root[data-theme="light"],
-    :root[data-theme="dark"],
-    :root[data-theme="soulless"],
-    :root[data-theme="black"],
-    :root[data-theme="lgreen"],
-    :root[data-theme="green"],
-    :root[data-theme="bad"],
-    :root[data-theme="tfx"],
-    :root[data-theme="scary"],
-    :root[data-theme="jolly"] {
-        font-size: 13px;
-    }
-
-    body {
-        display: block;
-        height: auto;
-        overflow-y: auto;
-        padding: 1rem;
-    }
-
-    .left-nav {
-        width: 100%;
-        height: auto;
-        min-height: 3.5rem;
-        box-sizing: border-box;
-        z-index: 10;
-        display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .left-nav>* {
-        flex-shrink: 0;
-    }
-
-    .theme-selector-container {
-        margin-bottom: 0;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    select#theme-selector {
-        width: auto;
-    }
-
-    .left-nav-entry {
-        display: inline-block;
-        flex-shrink: 0;
-    }
-
-    .left-nav-entry:hover,
-    .left-nav-entry:active {
-        transform: none;
-    }
-
-    .iframe-container {
-        width: 100%;
-        height: 60vh;
-        margin: 1rem 0;
-        padding: 0;
-        border: var(--border-size) solid var(--bg-border);
-        overflow: hidden;
-    }
-
-    iframe.center-iframe {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-        height: 60vh;
-        max-height: 60vh;
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .right-news {
-        width: 100%;
-        box-sizing: border-box;
-        height: auto;
-        min-height: 10rem;
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        display: flex;
-        padding-top: 0;
-        flex-direction: row;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .right-news>* {
-        flex-shrink: 0;
-    }
-}
-
 button {
     background: var(--bg-panel);
     border: var(--border-size) solid var(--bg-border);
@@ -781,5 +676,138 @@ p {
 
     100% {
         transform: translateY(-1px);
+    }
+}
+
+@media (max-width: 1000px) {
+
+    :root,
+    :root[data-theme="light"],
+    :root[data-theme="dark"],
+    :root[data-theme="soulless"],
+    :root[data-theme="black"],
+    :root[data-theme="lgreen"],
+    :root[data-theme="green"],
+    :root[data-theme="bad"],
+    :root[data-theme="tfx"],
+    :root[data-theme="scary"],
+    :root[data-theme="jolly"] {
+        font-size: 14px;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        overflow: hidden;
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .left-nav {
+        width: 100%;
+        height: auto;
+        min-height: max-content;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .left-nav>* {
+        flex-shrink: 0;
+    }
+
+    .theme-selector-container {
+        margin-bottom: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    select#theme-selector {
+        width: auto;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .left-nav-entry {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .left-nav-entry:hover,
+    .left-nav-entry:active {
+        transform: none;
+    }
+
+    .iframe-container {
+        width: 100%;
+        flex: 1;
+        margin: 0;
+        padding: 0;
+        border: var(--border-size) solid var(--bg-border);
+        overflow: hidden;
+        border-radius: var(--border-rad);
+    }
+
+    iframe.center-iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        margin: 0;
+        border: 0;
+    }
+
+    .right-news {
+        width: 100%;
+        box-sizing: border-box;
+        height: auto;
+        min-height: fit-content;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .right-news>* {
+        flex-shrink: 0;
+    }
+
+    .left-nav::-webkit-scrollbar,
+    .right-news::-webkit-scrollbar {
+        display: none;
+    }
+
+    .news-entry {
+        width: 16rem;
+        max-width: 80vw;
+        height: auto;
+        max-height: none;
+        padding: 0.5rem;
+        background: var(--bg-main);
+        border-radius: calc(var(--border-rad) * 0.75);
+    }
+
+    .news-desc {
+        max-width: 100%;
+        white-space: normal;
+        margin: 0;
+        font-size: 0.95rem;
     }
 }
