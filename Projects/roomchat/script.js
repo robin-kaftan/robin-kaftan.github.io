@@ -10,6 +10,11 @@ let cryptoKey = null;
 
 const RAM_LIMIT_BYTES = 400 * 1024 * 1024;
 
+// Pinned Rooms State & Background Monitor Data
+let pinnedRooms = JSON.parse(localStorage.getItem('pinnedRooms') || '[]');
+let pinnedStatuses = {}; // Map of roomId -> boolean (online/offline)
+let pinMonitorPeer = null;
+
 async function deriveCryptoKey(roomId) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
@@ -119,6 +124,121 @@ function trimOldMessages() {
     }
 }
 
+/* ==========================================================================
+   PINNED ROOMS MANAGEMENT & MONITORING
+   ========================================================================== */
+
+function savePinnedRooms() {
+    localStorage.setItem('pinnedRooms', JSON.stringify(pinnedRooms));
+}
+
+function updateRoomStatus(roomId, isOnline) {
+    const wasOnline = pinnedStatuses[roomId];
+    pinnedStatuses[roomId] = isOnline;
+
+    if (wasOnline === false && isOnline === true) {
+        playSFX('pinonline.wav');
+    } else if (wasOnline === true && isOnline === false) {
+        playSFX('pinoffline.wav');
+    }
+    updateNotifBar();
+}
+
+function togglePinRoom(roomId) {
+    if (!roomId) return;
+    const index = pinnedRooms.indexOf(roomId);
+    if (index === -1) {
+        pinnedRooms.push(roomId);
+        savePinnedRooms();
+        playSFX('pin.wav');
+    } else {
+        pinnedRooms.splice(index, 1);
+        delete pinnedStatuses[roomId];
+        savePinnedRooms();
+        playSFX('unpin.wav');
+    }
+    updatePinDisplay();
+    updateNotifBar();
+    checkPinnedRoomsOnlineStatus();
+}
+
+function updatePinDisplay() {
+    const pinTag = document.getElementById('isRoomPinned');
+    const pinControls = document.querySelector('.room-controls');
+    if (pinTag) {
+        const isPinned = pinnedRooms.includes(currentRoom);
+        pinTag.hidden = !isPinned;
+    }
+    if (pinControls) {
+        const isPinned = pinnedRooms.includes(currentRoom);
+        pinControls.innerHTML = `ESC: Return to menu<br>E:   Show react buttons<br>P:   ${isPinned ? 'Unpin' : 'Pin'} this room`;
+    }
+}
+
+function updateNotifBar() {
+    const notifEl = document.getElementById('notifRoomsOnline');
+    if (!notifEl) return;
+
+    if (pinnedRooms.length === 0) {
+        notifEl.innerText = "No pinned rooms.";
+        return;
+    }
+
+    const onlinePinned = pinnedRooms.filter(id => pinnedStatuses[id] === true);
+    if (onlinePinned.length > 0) {
+        notifEl.innerText = `Pinned online: ${onlinePinned.join(', ')}`;
+    } else {
+        notifEl.innerText = "No pinned rooms online.";
+    }
+}
+
+async function checkPinnedRoomsOnlineStatus() {
+    if (pinnedRooms.length === 0) {
+        updateNotifBar();
+        return;
+    }
+
+    if (!pinMonitorPeer || pinMonitorPeer.destroyed) {
+        pinMonitorPeer = new Peer();
+        await new Promise(resolve => pinMonitorPeer.on('open', resolve));
+    }
+
+    pinnedRooms.forEach(roomId => {
+        if (currentRoom === roomId) {
+            updateRoomStatus(roomId, true);
+            return;
+        }
+
+        const testConn = pinMonitorPeer.connect(roomId);
+        let statusResolved = false;
+
+        const timeout = setTimeout(() => {
+            if (!statusResolved) {
+                statusResolved = true;
+                testConn.close();
+                updateRoomStatus(roomId, false);
+            }
+        }, 2000);
+
+        testConn.on('open', () => {
+            if (!statusResolved) {
+                statusResolved = true;
+                clearTimeout(timeout);
+                testConn.close();
+                updateRoomStatus(roomId, true);
+            }
+        });
+
+        testConn.on('error', () => {
+            if (!statusResolved) {
+                statusResolved = true;
+                clearTimeout(timeout);
+                updateRoomStatus(roomId, false);
+            }
+        });
+    });
+}
+
 setInterval(() => {
     const now = new Date();
     document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
@@ -127,7 +247,16 @@ setInterval(() => {
     checkAndTrimMemory();
 }, 1000);
 
+setInterval(() => {
+    checkPinnedRoomsOnlineStatus();
+}, 5000);
+
+let isEKeyPressed = false;
+
 document.addEventListener('keydown', (e) => {
+    const activeElement = document.activeElement;
+    const isTyping = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
     if (e.key === 'Escape') {
         const activeSection = document.querySelector('section:not([hidden])');
         if (activeSection && activeSection.id !== 'logon' && activeSection.id !== 'menu') {
@@ -135,11 +264,35 @@ document.addEventListener('keydown', (e) => {
             transitionTo('menu');
         }
     }
+
+    if ((e.key === 'e' || e.key === 'E') && !e.repeat && !isEKeyPressed && !isTyping) {
+        isEKeyPressed = true;
+        document.body.classList.add('show-reactions');
+    }
+
+    if ((e.key === 'p' || e.key === 'P') && !isTyping) {
+        const activeSection = document.querySelector('section:not([hidden])');
+        if (activeSection && activeSection.id === 'room' && currentRoom) {
+            togglePinRoom(currentRoom);
+        }
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'e' || e.key === 'E') {
+        isEKeyPressed = false;
+        document.body.classList.remove('show-reactions');
+    }
+});
+
+window.addEventListener('blur', () => {
+    isEKeyPressed = false;
+    document.body.classList.remove('show-reactions');
 });
 
 function focusActiveInput() {
     const activeSection = document.querySelector('section:not([hidden])');
-    if (activeSection) {
+    if (activeSection && activeSection.id !== 'room') {
         const input = activeSection.querySelector('input:not([type="file"])');
         if (input && !input.disabled) {
             input.focus();
@@ -165,6 +318,7 @@ function transitionTo(targetSectionId) {
 
     if (targetSectionId === 'room' && currentRoom) {
         document.title = `roomchat - ${currentRoom}`;
+        updatePinDisplay();
     } else {
         document.title = 'roomchat';
     }
@@ -195,6 +349,8 @@ function transitionTo(targetSectionId) {
 window.addEventListener('DOMContentLoaded', () => {
     transitionTo('logon');
     updateFavicon('1');
+    updateNotifBar();
+    checkPinnedRoomsOnlineStatus();
 });
 
 function setUsername(name) {
@@ -268,6 +424,9 @@ async function initPeerSession(roomId) {
     peer.on('open', () => {
         isHost = true;
         setupHostRoom(roomId);
+        if (pinnedRooms.includes(roomId)) {
+            updateRoomStatus(roomId, true);
+        }
     });
 
     peer.on('error', (err) => {
@@ -386,6 +545,9 @@ function setupClientRoom(roomId) {
         playSFX('error.wav');
         const miscErr = document.getElementById('miscJoinError');
         if (miscErr) miscErr.hidden = false;
+        if (pinnedRooms.includes(roomId)) {
+            updateRoomStatus(roomId, false);
+        }
     });
 
     peer.on('open', () => {
@@ -396,6 +558,9 @@ function setupClientRoom(roomId) {
             playSFX('error.wav');
             const miscErr = document.getElementById('miscJoinError');
             if (miscErr) miscErr.hidden = false;
+            if (pinnedRooms.includes(roomId)) {
+                updateRoomStatus(roomId, false);
+            }
         });
 
         hostConn.on('open', () => {
@@ -404,6 +569,9 @@ function setupClientRoom(roomId) {
             document.getElementById('roomCreatorDisplay').innerText = 'Host';
             playSFX('success.wav');
             transitionTo('room');
+            if (pinnedRooms.includes(roomId)) {
+                updateRoomStatus(roomId, true);
+            }
         });
 
         hostConn.on('data', async (rawPacket) => {
@@ -460,13 +628,27 @@ function setupClientRoom(roomId) {
         });
 
         hostConn.on('close', () => {
+            if (pinnedRooms.includes(roomId)) {
+                updateRoomStatus(roomId, false);
+            }
             setInputsDisabled(false);
             playSFX('error.wav');
+            leaveCurrentRoom();
+            transitionTo('roomSearch');
+            const miscErr = document.getElementById('miscJoinError');
+            if (miscErr) {
+                miscErr.innerText = 'The host has closed or left the room.';
+                miscErr.hidden = false;
+            }
         });
     });
 }
 
 function leaveCurrentRoom() {
+    const activeRoomId = currentRoom;
+    if (isHost && connections.length > 0) {
+        connections.forEach(conn => conn.close());
+    }
     if (peer) {
         peer.destroy();
         peer = null;
@@ -478,6 +660,11 @@ function leaveCurrentRoom() {
     cryptoKey = null;
     roomUsers = [];
     roomHistory = [];
+    document.body.classList.remove('show-reactions');
+
+    if (activeRoomId && pinnedRooms.includes(activeRoomId)) {
+        updateRoomStatus(activeRoomId, false);
+    }
 
     const msgContainer = document.getElementById('msgContainer');
     const messages = msgContainer.querySelectorAll('.message:not(#templateMessageEntry)');
@@ -644,8 +831,12 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null) 
             waveBtn.onclick = () => handleVoteClick(msgId, 'wave');
         }
     } else {
-        if (upBtn) upBtn.onclick = () => handleVoteClick(msgId, 'up');
-        if (downBtn) downBtn.onclick = () => handleVoteClick(msgId, 'down');
+        if (upBtn) {
+            upBtn.onclick = () => handleVoteClick(msgId, 'up');
+        }
+        if (downBtn) {
+            downBtn.onclick = () => handleVoteClick(msgId, 'down');
+        }
     }
 
     container.appendChild(msg);

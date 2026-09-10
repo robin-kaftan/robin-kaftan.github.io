@@ -214,6 +214,14 @@ section {
     border: none;
 }
 
+.reactionBtn:not(#downloadBtn):not([hidden]) {
+    display: none !important;
+}
+
+body.show-reactions .reactionBtn:not(#downloadBtn):not([hidden]) {
+    display: inline-block !important;
+}
+
 .reactionBtn:hover {
     background: var(--green);
     color: var(--bg);
@@ -258,4 +266,20 @@ section {
     width: 0;
     height: 0;
     pointer-events: none;
+}
+
+.room-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 25ch;
+    color: var(--green);
+}
+
+.notif-rooms-online {
+    color: var(--red);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
 }

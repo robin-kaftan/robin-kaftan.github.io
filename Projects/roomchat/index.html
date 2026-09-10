@@ -13,6 +13,7 @@
         <div class="topbar">
             <span id="date">1st Jan, 2026</span>/<span id="time">00:00:00</span>
             <span id="selfUsernameDisplay" class="topbar-user-display">Username</span>
+            <span id="notifRoomsOnline" class="notif-rooms-online">No pinned rooms online.</span>
         </div>
 
         <section id="logon">
@@ -67,12 +68,17 @@
         <section id="room" hidden>
             <div class="sidebar">
                 <p>
-                    Room: <span id="roomIDDisplay" class="selectable">RoomID</span><br>
+                    Room: <span id="roomIDDisplay" class="selectable">RoomID</span> <span id="isRoomPinned" class="red">(PINNED)</span><br>
                     By: <span id="roomCreatorDisplay" class="selectable">OnlyTwentyCharacters</span><br>
                     <br>
                     Users In Room: (<span id="userCountInRoom">0</span>/25)<br>
                 </p>
                 <div id="userList"></div>
+                <div class="room-controls">
+                    ESC: Return to menu<br>
+                    E:   Show react buttons<br>
+                    P:   Pin this room<br>
+                </div>
             </div>
             <div class="msgs" id="msgContainer">
                 <p hidden class="message" id="templateMessageEntry">
