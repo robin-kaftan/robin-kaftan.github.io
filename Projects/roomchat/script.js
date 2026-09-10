@@ -1,0 +1,715 @@
+let currentUser = "";
+let currentRoom = "";
+let isHost = false;
+let peer = null;
+let connections = [];
+let hostConn = null;
+let roomUsers = [];
+let roomHistory = [];
+let cryptoKey = null;
+
+const RAM_LIMIT_BYTES = 400 * 1024 * 1024;
+
+async function deriveCryptoKey(roomId) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw",
+        enc.encode(roomId),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: enc.encode("roomchat_static_salt_" + roomId),
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function encryptData(dataObject) {
+    if (!cryptoKey) return dataObject;
+    const enc = new TextEncoder();
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const jsonString = JSON.stringify(dataObject);
+    const ciphertext = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        cryptoKey,
+        enc.encode(jsonString)
+    );
+    return {
+        encrypted: true,
+        iv: Array.from(iv),
+        payload: ciphertext
+    };
+}
+
+async function decryptData(packet) {
+    if (!packet || !packet.encrypted || !cryptoKey) return packet;
+    const dec = new TextDecoder();
+    const iv = new Uint8Array(packet.iv);
+    const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        cryptoKey,
+        packet.payload
+    );
+    return JSON.parse(dec.decode(decryptedBuffer));
+}
+
+async function sendEncrypted(conn, dataObject) {
+    try {
+        const encryptedPacket = await encryptData(dataObject);
+        conn.send(encryptedPacket);
+    } catch (err) {
+        console.error("Encryption error:", err);
+    }
+}
+
+function playSFX(filename) {
+    try {
+        const audio = new Audio(`./Resources/sfx/${filename}`);
+        audio.play().catch(() => { });
+    } catch (err) { }
+}
+
+function updateFavicon(themeNumber) {
+    let favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+    }
+    favicon.type = 'image/png';
+    favicon.href = `./Resources/theme-${themeNumber}.png`;
+}
+
+function setInputsDisabled(disabled) {
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => input.disabled = disabled);
+}
+
+function checkAndTrimMemory() {
+    if (window.performance && window.performance.memory) {
+        const usedHeap = window.performance.memory.usedJSHeapSize;
+        if (usedHeap >= RAM_LIMIT_BYTES) {
+            trimOldMessages();
+        }
+    }
+}
+
+function trimOldMessages() {
+    const msgContainer = document.getElementById('msgContainer');
+    const messages = Array.from(msgContainer.querySelectorAll('.message:not(#templateMessageEntry)'));
+
+    const targetTrimCount = Math.max(0, messages.length - 20);
+    const toRemoveCount = Math.min(15, targetTrimCount);
+
+    for (let i = 0; i < toRemoveCount; i++) {
+        messages[i].remove();
+    }
+
+    if (isHost && roomHistory.length > 20) {
+        roomHistory.splice(0, Math.min(15, roomHistory.length - 20));
+    }
+}
+
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
+    document.getElementById('date').innerText = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    checkAndTrimMemory();
+}, 1000);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const activeSection = document.querySelector('section:not([hidden])');
+        if (activeSection && activeSection.id !== 'logon' && activeSection.id !== 'menu') {
+            leaveCurrentRoom();
+            transitionTo('menu');
+        }
+    }
+});
+
+function focusActiveInput() {
+    const activeSection = document.querySelector('section:not([hidden])');
+    if (activeSection) {
+        const input = activeSection.querySelector('input:not([type="file"])');
+        if (input && !input.disabled) {
+            input.focus();
+        }
+    }
+}
+
+function transitionTo(targetSectionId) {
+    const sections = document.querySelectorAll('section');
+    sections.forEach(sec => {
+        sec.hidden = true;
+        const input = sec.querySelector('input');
+        if (input) input.value = '';
+    });
+
+    const sameUserErr = document.getElementById('sameUserError');
+    if (sameUserErr) sameUserErr.hidden = true;
+
+    const miscJoinErr = document.getElementById('miscJoinError');
+    if (miscJoinErr) miscJoinErr.hidden = true;
+
+    setInputsDisabled(false);
+
+    if (targetSectionId === 'room' && currentRoom) {
+        document.title = `roomchat - ${currentRoom}`;
+    } else {
+        document.title = 'roomchat';
+    }
+
+    const targetSection = document.getElementById(targetSectionId);
+    targetSection.hidden = false;
+
+    focusActiveInput();
+
+    const elements = Array.from(targetSection.querySelectorAll('p:not(#sameUserError):not(#miscJoinError), span, input, button, .sidebar > p, #userList, .bottombar > span'));
+
+    elements.forEach(el => el.classList.add('seq-hidden'));
+
+    let index = 0;
+    const intervalTime = 1000 / 30;
+
+    const timer = setInterval(() => {
+        if (index < elements.length) {
+            elements[index].classList.remove('seq-hidden');
+            index++;
+        } else {
+            clearInterval(timer);
+            focusActiveInput();
+        }
+    }, intervalTime);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    transitionTo('logon');
+    updateFavicon('1');
+});
+
+function setUsername(name) {
+    currentUser = name;
+    const userDisplay = document.getElementById('selfUsernameDisplay');
+    if (userDisplay) userDisplay.innerText = currentUser;
+}
+
+document.getElementById('logonInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (val.length >= 3) {
+            setUsername(val);
+            playSFX('success.wav');
+            transitionTo('menu');
+        } else {
+            playSFX('error.wav');
+        }
+    }
+});
+
+document.getElementById('menuInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (val === '1') transitionTo('roomSearch');
+        if (val === '2') transitionTo('settings');
+        if (val === '3') transitionTo('logon');
+    }
+});
+
+document.getElementById('settingsInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        e.target.value = '';
+
+        if (val === '') {
+            transitionTo('menu');
+        } else if (val === '1' || val === '2' || val === '3') {
+            document.body.className = `theme-${val}`;
+            updateFavicon(val);
+            playSFX('success.wav');
+        } else {
+            playSFX('error.wav');
+        }
+    }
+});
+
+document.getElementById('roomSearchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const roomId = e.target.value.trim();
+        if (roomId === '') {
+            transitionTo('menu');
+            return;
+        }
+        setInputsDisabled(true);
+        initPeerSession(roomId);
+    }
+});
+
+async function initPeerSession(roomId) {
+    currentRoom = roomId;
+    cryptoKey = await deriveCryptoKey(roomId);
+
+    if (peer) {
+        peer.destroy();
+        peer = null;
+    }
+
+    peer = new Peer(roomId);
+
+    peer.on('open', () => {
+        isHost = true;
+        setupHostRoom(roomId);
+    });
+
+    peer.on('error', (err) => {
+        if (err.type === 'unavailable-id') {
+            isHost = false;
+            peer.destroy();
+            peer = null;
+            setupClientRoom(roomId);
+        } else {
+            setInputsDisabled(false);
+            playSFX('error.wav');
+            const miscErr = document.getElementById('miscJoinError');
+            if (miscErr) miscErr.hidden = false;
+        }
+    });
+}
+
+function storeHostMessage(msgData) {
+    roomHistory.push(msgData);
+    if (roomHistory.length > 69) {
+        roomHistory.shift();
+    }
+}
+
+function setupHostRoom(roomId) {
+    document.getElementById('roomIDDisplay').innerText = roomId;
+    document.getElementById('roomCreatorDisplay').innerText = currentUser;
+
+    roomUsers = [{ name: currentUser, peerId: peer.id }];
+    roomHistory = [];
+    updateUserList(roomUsers.map(u => u.name));
+    playSFX('success.wav');
+    transitionTo('room');
+
+    peer.on('connection', (conn) => {
+        connections.push(conn);
+
+        conn.on('data', async (rawPacket) => {
+            let data;
+            try {
+                data = await decryptData(rawPacket);
+            } catch (err) {
+                console.error("Decryption failed:", err);
+                return;
+            }
+
+            if (data.type === 'join') {
+                const isDuplicate = roomUsers.some(u => u.name.toLowerCase() === data.user.toLowerCase());
+                if (isDuplicate) {
+                    sendEncrypted(conn, { type: 'error', message: 'Username is already taken in this room.' });
+                    setTimeout(() => conn.close(), 200);
+                    return;
+                }
+
+                roomUsers.push({ name: data.user, peerId: conn.peer });
+
+                broadcast({ type: 'userList', users: roomUsers.map(u => u.name) });
+                updateUserList(roomUsers.map(u => u.name));
+
+                playSFX('joined.wav');
+
+                const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+                const sysMsg = { type: 'system', text: `${data.user} has entered the room.`, msgId };
+
+                appendMessage('[System]', sysMsg.text, msgId, true);
+                storeHostMessage(sysMsg);
+
+                sendEncrypted(conn, { type: 'history', messages: roomHistory.slice(-69) });
+                broadcast(sysMsg, conn.peer);
+
+            } else if (data.type === 'chat') {
+                appendMessage(data.author, data.text, data.msgId, false, data.image);
+                storeHostMessage(data);
+                if (document.hidden) playSFX('message.wav');
+                broadcast(data, conn.peer);
+            } else if (data.type === 'vote') {
+                applyVote(data.msgId, data.voteType, data.user);
+
+                const targetMsg = roomHistory.find(m => m.msgId === data.msgId);
+                if (targetMsg) {
+                    if (!targetMsg.votes) targetMsg.votes = {};
+                    if (targetMsg.votes[data.user] === data.voteType) {
+                        delete targetMsg.votes[data.user];
+                    } else {
+                        targetMsg.votes[data.user] = data.voteType;
+                    }
+                }
+
+                broadcast(data, conn.peer);
+            }
+        });
+
+        conn.on('close', () => {
+            connections = connections.filter(c => c !== conn);
+            const leavingUserObj = roomUsers.find(u => u.peerId === conn.peer);
+            const leavingUser = leavingUserObj ? leavingUserObj.name : "A user";
+
+            roomUsers = roomUsers.filter(u => u.peerId !== conn.peer);
+            broadcast({ type: 'userList', users: roomUsers.map(u => u.name) });
+            updateUserList(roomUsers.map(u => u.name));
+
+            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+            const sysMsg = { type: 'system', text: `${leavingUser} has left the room.`, msgId };
+            appendMessage('[System]', sysMsg.text, msgId, true);
+            storeHostMessage(sysMsg);
+            broadcast(sysMsg);
+        });
+    });
+}
+
+function setupClientRoom(roomId) {
+    peer = new Peer();
+
+    peer.on('error', () => {
+        setInputsDisabled(false);
+        playSFX('error.wav');
+        const miscErr = document.getElementById('miscJoinError');
+        if (miscErr) miscErr.hidden = false;
+    });
+
+    peer.on('open', () => {
+        hostConn = peer.connect(roomId);
+
+        hostConn.on('error', () => {
+            setInputsDisabled(false);
+            playSFX('error.wav');
+            const miscErr = document.getElementById('miscJoinError');
+            if (miscErr) miscErr.hidden = false;
+        });
+
+        hostConn.on('open', () => {
+            sendEncrypted(hostConn, { type: 'join', user: currentUser });
+            document.getElementById('roomIDDisplay').innerText = roomId;
+            document.getElementById('roomCreatorDisplay').innerText = 'Host';
+            playSFX('success.wav');
+            transitionTo('room');
+        });
+
+        hostConn.on('data', async (rawPacket) => {
+            let data;
+            try {
+                data = await decryptData(rawPacket);
+            } catch (err) {
+                console.error("Decryption failed:", err);
+                return;
+            }
+
+            if (data.type === 'error') {
+                playSFX('error.wav');
+                leaveCurrentRoom();
+                transitionTo('roomSearch');
+                const errEl = document.getElementById('sameUserError');
+                if (errEl) errEl.hidden = false;
+            } else if (data.type === 'history') {
+                const msgContainer = document.getElementById('msgContainer');
+                const messages = msgContainer.querySelectorAll('.message:not(#templateMessageEntry)');
+                messages.forEach(m => m.remove());
+
+                data.messages.forEach(msg => {
+                    const isSys = msg.type === 'system';
+                    const author = isSys ? '[System]' : msg.author;
+
+                    if (!document.querySelector(`[data-msg-id="${msg.msgId}"]`)) {
+                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image);
+                    }
+
+                    if (msg.votes) {
+                        Object.entries(msg.votes).forEach(([vUser, vType]) => {
+                            applyVote(msg.msgId, vType, vUser);
+                        });
+                    }
+                });
+            } else if (data.type === 'userList') {
+                updateUserList(data.users);
+            } else if (data.type === 'chat') {
+                if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
+                    appendMessage(data.author, data.text, data.msgId, false, data.image);
+                }
+                if (document.hidden) playSFX('message.wav');
+            } else if (data.type === 'system') {
+                if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
+                    appendMessage('[System]', data.text, data.msgId, true);
+                }
+                if (data.text.includes('has entered') && document.hidden) {
+                    playSFX('joined.wav');
+                }
+            } else if (data.type === 'vote') {
+                applyVote(data.msgId, data.voteType, data.user);
+            }
+        });
+
+        hostConn.on('close', () => {
+            setInputsDisabled(false);
+            playSFX('error.wav');
+        });
+    });
+}
+
+function leaveCurrentRoom() {
+    if (peer) {
+        peer.destroy();
+        peer = null;
+    }
+    connections = [];
+    hostConn = null;
+    currentRoom = "";
+    isHost = false;
+    cryptoKey = null;
+    roomUsers = [];
+    roomHistory = [];
+
+    const msgContainer = document.getElementById('msgContainer');
+    const messages = msgContainer.querySelectorAll('.message:not(#templateMessageEntry)');
+    messages.forEach(m => m.remove());
+}
+
+function broadcast(data, excludePeerId = null) {
+    connections.forEach(conn => {
+        if (conn.peer !== excludePeerId) {
+            sendEncrypted(conn, data);
+        }
+    });
+}
+
+function updateUserList(users) {
+    const container = document.getElementById('userList');
+    container.innerHTML = '';
+    document.getElementById('userCountInRoom').innerText = users.length;
+    users.forEach(user => {
+        const p = document.createElement('p');
+        p.innerHTML = `- <span class="selectable">${user}</span>`;
+        container.appendChild(p);
+    });
+}
+
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== '') {
+        const text = e.target.value.trim();
+        e.target.value = '';
+
+        const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+        const msgData = { type: 'chat', author: currentUser, text, msgId };
+
+        appendMessage(currentUser, text, msgId);
+
+        if (isHost) {
+            storeHostMessage(msgData);
+            broadcast(msgData);
+        } else if (hostConn) {
+            sendEncrypted(hostConn, msgData);
+        } else {
+            playSFX('error.wav');
+        }
+    }
+});
+
+document.getElementById('sendImageButton').addEventListener('click', () => {
+    document.getElementById('imageInput').click();
+});
+
+document.getElementById('imageInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    e.target.value = '';
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height && width > maxDim) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+            } else if (height > maxDim) {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const imageDataBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+            const text = document.getElementById('chatInput').value.trim();
+            document.getElementById('chatInput').value = '';
+
+            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+            const msgData = {
+                type: 'chat',
+                author: currentUser,
+                text: text,
+                image: imageDataBase64,
+                msgId: msgId
+            };
+
+            appendMessage(currentUser, text, msgId, false, imageDataBase64);
+
+            if (isHost) {
+                storeHostMessage(msgData);
+                broadcast(msgData);
+            } else if (hostConn) {
+                sendEncrypted(hostConn, msgData);
+            } else {
+                playSFX('error.wav');
+            }
+        };
+        img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+function appendMessage(author, text, msgId, isSystem = false, imageData = null) {
+    const container = document.getElementById('msgContainer');
+    const template = document.getElementById('templateMessageEntry');
+    const msg = template.cloneNode(true);
+
+    msg.removeAttribute('id');
+    msg.dataset.msgId = msgId;
+    msg.dataset.votes = JSON.stringify({});
+    msg.hidden = false;
+
+    msg.querySelector('#messageAuthor').innerText = `${author}: `;
+
+    const contentSpan = msg.querySelector('#messageContent');
+    if (text) {
+        contentSpan.innerText = text;
+    } else {
+        contentSpan.hidden = true;
+    }
+
+    const msgImg = msg.querySelector('#messageImage');
+    const imgBreaks = msg.querySelectorAll('#imageBreak');
+    const downloadBtn = msg.querySelector('#downloadBtn');
+
+    if (imageData && msgImg) {
+        msgImg.src = imageData;
+        msgImg.hidden = false;
+        imgBreaks.forEach(br => br.hidden = false);
+
+        if (downloadBtn) {
+            downloadBtn.hidden = false;
+            downloadBtn.onclick = () => {
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0];
+                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+                const filename = `${currentRoom || 'room'}-${dateStr}-${timeStr}.png`;
+
+                const a = document.createElement('a');
+                a.href = imageData;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+        }
+    }
+
+    const upBtn = msg.querySelector('#upvoteBtn');
+    const downBtn = msg.querySelector('#downvoteBtn');
+    const waveBtn = msg.querySelector('#waveBtn');
+
+    if (isSystem) {
+        if (upBtn) upBtn.hidden = true;
+        if (downBtn) downBtn.hidden = true;
+        if (waveBtn) {
+            waveBtn.hidden = false;
+            waveBtn.onclick = () => handleVoteClick(msgId, 'wave');
+        }
+    } else {
+        if (upBtn) upBtn.onclick = () => handleVoteClick(msgId, 'up');
+        if (downBtn) downBtn.onclick = () => handleVoteClick(msgId, 'down');
+    }
+
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+}
+
+function handleVoteClick(msgId, voteType) {
+    applyVote(msgId, voteType, currentUser);
+
+    const voteData = { type: 'vote', msgId, voteType, user: currentUser };
+    if (isHost) {
+        const targetMsg = roomHistory.find(m => m.msgId === msgId);
+        if (targetMsg) {
+            if (!targetMsg.votes) targetMsg.votes = {};
+            if (targetMsg.votes[currentUser] === voteType) {
+                delete targetMsg.votes[currentUser];
+            } else {
+                targetMsg.votes[currentUser] = voteType;
+            }
+        }
+        broadcast(voteData);
+    } else if (hostConn) {
+        sendEncrypted(hostConn, voteData);
+    }
+}
+
+function applyVote(msgId, voteType, user) {
+    const msg = document.querySelector(`[data-msg-id="${msgId}"]`);
+    if (!msg) return;
+
+    let votesMap = JSON.parse(msg.dataset.votes || '{}');
+
+    if (votesMap[user] === voteType) {
+        delete votesMap[user];
+    } else {
+        votesMap[user] = voteType;
+    }
+
+    msg.dataset.votes = JSON.stringify(votesMap);
+
+    let upCount = 0;
+    let downCount = 0;
+    let waveCount = 0;
+
+    Object.values(votesMap).forEach(type => {
+        if (type === 'up') upCount++;
+        if (type === 'down') downCount++;
+        if (type === 'wave') waveCount++;
+    });
+
+    const reactionsSpan = msg.querySelector('#messageReactions');
+    let parts = [];
+    if (upCount > 0) parts.push(`👍${upCount}`);
+    if (downCount > 0) parts.push(`👎${downCount}`);
+    if (waveCount > 0) parts.push(`👋${waveCount}`);
+
+    reactionsSpan.innerText = parts.join('|');
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('#sendImageButton') || e.target.closest('.reactionBtn')) return;
+    focusActiveInput();
+});
+
+window.addEventListener('focus', () => {
+    focusActiveInput();
+});

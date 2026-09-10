@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap');
+
+:root {
+    --bg: #000f00;
+    --gray: #909090;
+    --white: #ffffff;
+    --darkgreen: #009000;
+    --green: #00ff00;
+    --darkblue: #0000d0;
+    --blue: #0000ff;
+    --darkred: #900000;
+    --red: #ff0000;
+}
+
+body.theme-1 {
+    --bg: #000f00;
+    --gray: #909090;
+    --white: #ffffff;
+    --darkgreen: #009000;
+    --green: #00ff00;
+    --darkblue: #0000d0;
+    --blue: #0000ff;
+    --darkred: #900000;
+    --red: #ff0000;
+}
+
+body.theme-2 {
+    --bg: #4d004d;
+    --gray: #c7a9c4;
+    --white: #fff5ff;
+    --darkgreen: #bb55b6;
+    --green: #ff00c8;
+    --darkblue: #00b135;
+    --blue: #0fe44f;
+    --darkred: #900000;
+    --red: #ff0000;
+}
+
+body.theme-3 {
+    --bg: #444444;
+    --gray: #9c999c;
+    --white: #fff5ff;
+    --darkgreen: #d3d3d3;
+    --green: #ffffff;
+    --darkblue: #000ba0;
+    --blue: #1d0fe4;
+    --darkred: #900000;
+    --red: #ff0000;
+}
+
+.seq-hidden {
+    display: none !important;
+}
+
+.seq-visible {
+    display: initial !important;
+}
+
+* {
+    font-family: 'Cascadia Mono';
+    outline: none;
+    margin: 0;
+    line-height: 1.25;
+    font-size: 1rem;
+    caret-shape: block;
+    user-select: none;
+    scrollbar-color: var(--green) var(--bg);
+    scrollbar-width: thin;
+}
+
+::selection {
+    background: var(--darkgreen);
+    color: var(--white);
+}
+
+html,
+body {
+    overflow: hidden;
+    background: var(--bg);
+    padding: 0;
+}
+
+p,
+span {
+    color: var(--green);
+}
+
+input {
+    background: transparent;
+    border: none;
+    height: 1lh;
+    color: var(--green);
+    width: 25ch;
+}
+
+input::placeholder {
+    color: var(--darkgreen);
+}
+
+section {
+    width: 100%;
+    height: calc(100% - 2lh);
+    position: absolute;
+    top: 2lh;
+    left: 0;
+    background: transparent;
+}
+
+.topbar {
+    position: absolute;
+    padding-bottom: 1lh;
+    overflow: hidden;
+    width: 100%;
+    height: 1lh;
+    top: 0;
+    color: var(--green);
+    left: 0;
+}
+
+.topbar::after {
+    content: "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    position: absolute;
+    color: var(--green);
+    bottom: 0;
+    left: 0;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
+
+.sidebar {
+    width: 26ch;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    color: var(--green);
+    left: 0;
+    overflow: hidden;
+}
+
+.sidebar::after {
+    content: "|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|";
+    position: absolute;
+    top: 0;
+    right: 0;
+    white-space: pre;
+    color: var(--green);
+    line-height: 1.2;
+}
+
+.selectable {
+    user-select: text;
+}
+
+.bottombar {
+    width: calc(100% - 26ch);
+    height: 2lh;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+.bottombar::before {
+    content: "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    color: var(--green);
+    pointer-events: none;
+}
+
+.msgbox {
+    width: calc(100% - 7ch);
+    height: 1lh;
+    color: var(--green);
+    position: absolute;
+    bottom: 0;
+    right: 5ch;
+}
+
+.msgbox-prefix {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.msgbox-suffix {
+    position: absolute;
+    right: 4ch;
+    bottom: 0;
+}
+
+.msgs {
+    position: absolute;
+    width: calc(100% - 26ch);
+    height: calc(100% - 2lh);
+    top: 0;
+    right: 0;
+    overflow-y: auto;
+}
+
+#messageReactions {
+    background: var(--gray);
+    color: var(--white);
+}
+
+.reactionBtn {
+    height: 1lh;
+    background: transparent;
+    color: var(--green);
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+.reactionBtn:hover {
+    background: var(--green);
+    color: var(--bg);
+}
+
+.topbar-user-display {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.red {
+    color: var(--red);
+}
+
+.attachImgBtn {
+    width: 3ch;
+    height: 1lh;
+    background: transparent;
+    color: var(--green);
+    padding: 0;
+    margin: 0;
+    border: none;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.attachImgBtn:hover {
+    background: var(--green);
+    color: var(--bg);
+}
+
+.message-image {
+    max-height: 20lh;
+    min-height: 4lh;
+}
+
+#imageInput {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
