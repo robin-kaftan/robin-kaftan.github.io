@@ -119,6 +119,15 @@ function playSFX(filename) {
     } catch (err) { }
 }
 
+function playMessageSFX() {
+    const isRare = Math.floor(Math.random() * 10000) === 0;
+    if (isRare) {
+        playSFX('mail.mp3');
+    } else {
+        playSFX('message.wav');
+    }
+}
+
 function updateFavicon(themeNumber) {
     let favicon = document.querySelector('link[rel="icon"]');
     if (!favicon) {
@@ -380,7 +389,6 @@ function transitionTo(targetSectionId) {
 
     let index = 0;
 
-    // 1/60s delay (16.67ms) per HTML element transition in menus
     activeTransitionTimer = setInterval(() => {
         if (index < elements.length) {
             elements[index].classList.remove('seq-hidden');
@@ -547,7 +555,7 @@ function setupHostRoom(roomId) {
             } else if (data.type === 'chat') {
                 appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
                 storeHostMessage(data);
-                if (document.hidden) playSFX('message.wav');
+                if (document.hidden) playMessageSFX();
                 broadcast(data, conn.peer);
             } else if (data.type === 'vote') {
                 applyVote(data.msgId, data.voteType, data.user);
@@ -661,7 +669,7 @@ function setupClientRoom(roomId) {
                 if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
                     appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
                 }
-                if (document.hidden) playSFX('message.wav');
+                if (document.hidden) playMessageSFX();
             } else if (data.type === 'system') {
                 if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
                     appendMessage('[System]', data.text, data.msgId, true);
@@ -892,7 +900,6 @@ function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
             const textNode = document.createTextNode('');
             element.appendChild(textNode);
 
-            // 1/120 second delay (8.33ms) per letter
             const charInterval = setInterval(() => {
                 if (charIndex < text.length) {
                     textNode.textContent += text[charIndex];
@@ -901,7 +908,6 @@ function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
                     if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
                 } else {
                     clearInterval(charInterval);
-                    // 1/60 second delay (16.67ms) before moving to next HTML element node
                     setTimeout(processNextNode, 1000 / 60);
                 }
             }, 1000 / 120);
@@ -911,7 +917,6 @@ function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
 
             typewriteMessageContent(wrapper, node.innerHTML, false);
 
-            // 1/60 second delay (16.67ms) between HTML elements
             setTimeout(processNextNode, 1000 / 60);
         } else {
             element.appendChild(node.cloneNode(true));
