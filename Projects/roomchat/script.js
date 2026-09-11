@@ -21,9 +21,12 @@ function formatChatMessage(rawText) {
 
     let text = rawText.trim();
 
-    // Step 1: Strip outer angle brackets < ... > if present
+    // Step 1: If wrapped in < ... >, strip outer brackets and CANCEL all formatting inside
     if (text.startsWith('<') && text.endsWith('>')) {
-        text = text.substring(1, text.length - 1);
+        return text.substring(1, text.length - 1)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     // Step 2: Escape HTML special characters to prevent XSS
@@ -336,7 +339,14 @@ function focusActiveInput() {
     }
 }
 
+let activeTransitionTimer = null;
+
 function transitionTo(targetSectionId) {
+    if (activeTransitionTimer) {
+        clearInterval(activeTransitionTimer);
+        activeTransitionTimer = null;
+    }
+
     const sections = document.querySelectorAll('section');
     sections.forEach(sec => {
         sec.hidden = true;
@@ -369,17 +379,18 @@ function transitionTo(targetSectionId) {
     elements.forEach(el => el.classList.add('seq-hidden'));
 
     let index = 0;
-    const intervalTime = 1000 / 30;
 
-    const timer = setInterval(() => {
+    // 1/60s delay (16.67ms) per HTML element transition in menus
+    activeTransitionTimer = setInterval(() => {
         if (index < elements.length) {
             elements[index].classList.remove('seq-hidden');
             index++;
         } else {
-            clearInterval(timer);
+            clearInterval(activeTransitionTimer);
+            activeTransitionTimer = null;
             focusActiveInput();
         }
-    }, intervalTime);
+    }, 1000 / 60);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -635,7 +646,7 @@ function setupClientRoom(roomId) {
                     const author = isSys ? '[System]' : msg.author;
 
                     if (!document.querySelector(`[data-msg-id="${msg.msgId}"]`)) {
-                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image, msg.replyTo);
+                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image, msg.replyTo, true);
                     }
 
                     if (msg.votes) {
@@ -792,6 +803,7 @@ document.getElementById('chatInput').addEventListener('keydown', (e) => {
 });
 
 document.getElementById('sendImageButton').addEventListener('click', () => {
+    playSFX('press.wav');
     document.getElementById('imageInput').click();
 });
 
@@ -855,7 +867,62 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-function appendMessage(author, text, msgId, isSystem = false, imageData = null, replyData = null) {
+function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
+    if (skipAnimation) {
+        element.innerHTML = htmlContent;
+        return;
+    }
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    const nodes = Array.from(tempDiv.childNodes);
+    element.innerHTML = '';
+
+    let nodeIndex = 0;
+
+    function processNextNode() {
+        if (nodeIndex >= nodes.length) return;
+
+        const node = nodes[nodeIndex];
+        nodeIndex++;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent;
+            let charIndex = 0;
+            const textNode = document.createTextNode('');
+            element.appendChild(textNode);
+
+            // 1/120 second delay (8.33ms) per letter
+            const charInterval = setInterval(() => {
+                if (charIndex < text.length) {
+                    textNode.textContent += text[charIndex];
+                    charIndex++;
+                    const msgContainer = document.getElementById('msgContainer');
+                    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+                } else {
+                    clearInterval(charInterval);
+                    // 1/60 second delay (16.67ms) before moving to next HTML element node
+                    setTimeout(processNextNode, 1000 / 60);
+                }
+            }, 1000 / 120);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const wrapper = node.cloneNode(false);
+            element.appendChild(wrapper);
+
+            typewriteMessageContent(wrapper, node.innerHTML, false);
+
+            // 1/60 second delay (16.67ms) between HTML elements
+            setTimeout(processNextNode, 1000 / 60);
+        } else {
+            element.appendChild(node.cloneNode(true));
+            setTimeout(processNextNode, 1000 / 60);
+        }
+    }
+
+    processNextNode();
+}
+
+function appendMessage(author, text, msgId, isSystem = false, imageData = null, replyData = null, skipAnimation = false) {
     const container = document.getElementById('msgContainer');
     const template = document.getElementById('templateMessageEntry');
     const msg = template.cloneNode(true);
@@ -881,7 +948,8 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
 
     const contentSpan = msg.querySelector('#messageContent');
     if (text) {
-        contentSpan.innerHTML = formatChatMessage(text);
+        const formattedHtml = formatChatMessage(text);
+        typewriteMessageContent(contentSpan, formattedHtml, skipAnimation);
     } else {
         contentSpan.hidden = true;
     }
@@ -924,14 +992,28 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
         if (replyBtn) replyBtn.hidden = true;
         if (waveBtn) {
             waveBtn.hidden = false;
-            waveBtn.onclick = () => handleVoteClick(msgId, 'wave');
+            waveBtn.onclick = () => {
+                playSFX('press.wav');
+                handleVoteClick(msgId, 'wave');
+            };
         }
     } else {
-        if (upBtn) upBtn.onclick = () => handleVoteClick(msgId, 'up');
-        if (downBtn) downBtn.onclick = () => handleVoteClick(msgId, 'down');
+        if (upBtn) {
+            upBtn.onclick = () => {
+                playSFX('press.wav');
+                handleVoteClick(msgId, 'up');
+            };
+        }
+        if (downBtn) {
+            downBtn.onclick = () => {
+                playSFX('press.wav');
+                handleVoteClick(msgId, 'down');
+            };
+        }
         if (replyBtn) {
             replyBtn.hidden = false;
             replyBtn.onclick = () => {
+                playSFX('press.wav');
                 setReplyTarget(msgId, author, text || '[Image]');
             };
         }
