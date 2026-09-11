@@ -8,12 +8,45 @@ let roomUsers = [];
 let roomHistory = [];
 let cryptoKey = null;
 
+let replyingToMsg = null;
+
 const RAM_LIMIT_BYTES = 400 * 1024 * 1024;
 
-// Pinned Rooms State & Background Monitor Data
 let pinnedRooms = JSON.parse(localStorage.getItem('pinnedRooms') || '[]');
-let pinnedStatuses = {}; // Map of roomId -> boolean (online/offline)
+let pinnedStatuses = {};
 let pinMonitorPeer = null;
+
+function formatChatMessage(rawText) {
+    if (!rawText) return '';
+
+    let text = rawText.trim();
+
+    // Step 1: Strip outer angle brackets < ... > if present
+    if (text.startsWith('<') && text.endsWith('>')) {
+        text = text.substring(1, text.length - 1);
+    }
+
+    // Step 2: Escape HTML special characters to prevent XSS
+    text = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Step 3: Parse custom formatting tags
+    // ***text*** -> <i><b>text</b></i>
+    text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<i><b>$1</b></i>');
+
+    // **text** -> <i>text</i>
+    text = text.replace(/\*\*(.*?)\*\*/g, '<i>$1</i>');
+
+    // *text* -> <b>text</b>
+    text = text.replace(/\*(.*?)\*/g, '<b>$1</b>');
+
+    // _text_ -> <span class="darkgreen">text</span>
+    text = text.replace(/_(.*?)_/g, '<span class="darkgreen">$1</span>');
+
+    return text;
+}
 
 async function deriveCryptoKey(roomId) {
     const enc = new TextEncoder();
@@ -116,6 +149,9 @@ function trimOldMessages() {
     const toRemoveCount = Math.min(15, targetTrimCount);
 
     for (let i = 0; i < toRemoveCount; i++) {
+        if (replyingToMsg && messages[i].dataset.msgId === replyingToMsg.msgId) {
+            clearReplyTarget();
+        }
         messages[i].remove();
     }
 
@@ -123,10 +159,6 @@ function trimOldMessages() {
         roomHistory.splice(0, Math.min(15, roomHistory.length - 20));
     }
 }
-
-/* ==========================================================================
-   PINNED ROOMS MANAGEMENT & MONITORING
-   ========================================================================== */
 
 function savePinnedRooms() {
     localStorage.setItem('pinnedRooms', JSON.stringify(pinnedRooms));
@@ -266,8 +298,12 @@ document.addEventListener('keydown', (e) => {
     }
 
     if ((e.key === 'e' || e.key === 'E') && !e.repeat && !isEKeyPressed && !isTyping) {
-        isEKeyPressed = true;
-        document.body.classList.add('show-reactions');
+        if (replyingToMsg) {
+            clearReplyTarget();
+        } else {
+            isEKeyPressed = true;
+            document.body.classList.add('show-reactions');
+        }
     }
 
     if ((e.key === 'p' || e.key === 'P') && !isTyping) {
@@ -498,7 +534,7 @@ function setupHostRoom(roomId) {
                 broadcast(sysMsg, conn.peer);
 
             } else if (data.type === 'chat') {
-                appendMessage(data.author, data.text, data.msgId, false, data.image);
+                appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
                 storeHostMessage(data);
                 if (document.hidden) playSFX('message.wav');
                 broadcast(data, conn.peer);
@@ -599,7 +635,7 @@ function setupClientRoom(roomId) {
                     const author = isSys ? '[System]' : msg.author;
 
                     if (!document.querySelector(`[data-msg-id="${msg.msgId}"]`)) {
-                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image);
+                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image, msg.replyTo);
                     }
 
                     if (msg.votes) {
@@ -612,7 +648,7 @@ function setupClientRoom(roomId) {
                 updateUserList(data.users);
             } else if (data.type === 'chat') {
                 if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
-                    appendMessage(data.author, data.text, data.msgId, false, data.image);
+                    appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
                 }
                 if (document.hidden) playSFX('message.wav');
             } else if (data.type === 'system') {
@@ -644,6 +680,42 @@ function setupClientRoom(roomId) {
     });
 }
 
+function setReplyTarget(msgId, author, text) {
+    if (replyingToMsg && replyingToMsg.msgId === msgId) {
+        clearReplyTarget();
+        return;
+    }
+
+    clearReplyTarget();
+
+    replyingToMsg = { msgId, author, text };
+
+    const targetMsgEl = document.querySelector(`.message[data-msg-id="${msgId}"]`);
+    if (targetMsgEl) {
+        targetMsgEl.classList.add('reply-highlight');
+    }
+
+    const bar = document.getElementById('activeReplyBar');
+    const targetText = document.getElementById('replyTargetText');
+    if (bar && targetText) {
+        targetText.innerText = `Replying to ${author}: "${text.length > 30 ? text.substring(0, 30) + '...' : text}"`;
+        bar.hidden = false;
+    }
+    focusActiveInput();
+}
+
+function clearReplyTarget() {
+    if (replyingToMsg) {
+        const prevMsgEl = document.querySelector(`.message[data-msg-id="${replyingToMsg.msgId}"]`);
+        if (prevMsgEl) {
+            prevMsgEl.classList.remove('reply-highlight');
+        }
+    }
+    replyingToMsg = null;
+    const bar = document.getElementById('activeReplyBar');
+    if (bar) bar.hidden = true;
+}
+
 function leaveCurrentRoom() {
     const activeRoomId = currentRoom;
     if (isHost && connections.length > 0) {
@@ -660,6 +732,7 @@ function leaveCurrentRoom() {
     cryptoKey = null;
     roomUsers = [];
     roomHistory = [];
+    clearReplyTarget();
     document.body.classList.remove('show-reactions');
 
     if (activeRoomId && pinnedRooms.includes(activeRoomId)) {
@@ -696,9 +769,16 @@ document.getElementById('chatInput').addEventListener('keydown', (e) => {
         e.target.value = '';
 
         const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
-        const msgData = { type: 'chat', author: currentUser, text, msgId };
+        const msgData = {
+            type: 'chat',
+            author: currentUser,
+            text,
+            msgId,
+            replyTo: replyingToMsg ? { ...replyingToMsg } : null
+        };
 
-        appendMessage(currentUser, text, msgId);
+        appendMessage(currentUser, text, msgId, false, null, msgData.replyTo);
+        clearReplyTarget();
 
         if (isHost) {
             storeHostMessage(msgData);
@@ -754,10 +834,12 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
                 author: currentUser,
                 text: text,
                 image: imageDataBase64,
-                msgId: msgId
+                msgId: msgId,
+                replyTo: replyingToMsg ? { ...replyingToMsg } : null
             };
 
-            appendMessage(currentUser, text, msgId, false, imageDataBase64);
+            appendMessage(currentUser, text, msgId, false, imageDataBase64, msgData.replyTo);
+            clearReplyTarget();
 
             if (isHost) {
                 storeHostMessage(msgData);
@@ -773,7 +855,7 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-function appendMessage(author, text, msgId, isSystem = false, imageData = null) {
+function appendMessage(author, text, msgId, isSystem = false, imageData = null, replyData = null) {
     const container = document.getElementById('msgContainer');
     const template = document.getElementById('templateMessageEntry');
     const msg = template.cloneNode(true);
@@ -783,11 +865,23 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null) 
     msg.dataset.votes = JSON.stringify({});
     msg.hidden = false;
 
+    const replyingElements = msg.querySelectorAll('[data-replying]');
+    const replyUserEl = msg.querySelector('#replyingToUser');
+    const replyContentEl = msg.querySelector('#replyingToContent');
+
+    if (replyData) {
+        replyingElements.forEach(el => el.hidden = false);
+        if (replyUserEl) replyUserEl.innerText = `${replyData.author}: `;
+        if (replyContentEl) replyContentEl.innerHTML = formatChatMessage(replyData.text) || '[Image]';
+    } else {
+        replyingElements.forEach(el => el.hidden = true);
+    }
+
     msg.querySelector('#messageAuthor').innerText = `${author}: `;
 
     const contentSpan = msg.querySelector('#messageContent');
     if (text) {
-        contentSpan.innerText = text;
+        contentSpan.innerHTML = formatChatMessage(text);
     } else {
         contentSpan.hidden = true;
     }
@@ -822,20 +916,24 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null) 
     const upBtn = msg.querySelector('#upvoteBtn');
     const downBtn = msg.querySelector('#downvoteBtn');
     const waveBtn = msg.querySelector('#waveBtn');
+    const replyBtn = msg.querySelector('#replyBtn');
 
     if (isSystem) {
         if (upBtn) upBtn.hidden = true;
         if (downBtn) downBtn.hidden = true;
+        if (replyBtn) replyBtn.hidden = true;
         if (waveBtn) {
             waveBtn.hidden = false;
             waveBtn.onclick = () => handleVoteClick(msgId, 'wave');
         }
     } else {
-        if (upBtn) {
-            upBtn.onclick = () => handleVoteClick(msgId, 'up');
-        }
-        if (downBtn) {
-            downBtn.onclick = () => handleVoteClick(msgId, 'down');
+        if (upBtn) upBtn.onclick = () => handleVoteClick(msgId, 'up');
+        if (downBtn) downBtn.onclick = () => handleVoteClick(msgId, 'down');
+        if (replyBtn) {
+            replyBtn.hidden = false;
+            replyBtn.onclick = () => {
+                setReplyTarget(msgId, author, text || '[Image]');
+            };
         }
     }
 

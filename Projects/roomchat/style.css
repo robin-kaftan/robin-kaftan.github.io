@@ -283,3 +283,13 @@ body.show-reactions .reactionBtn:not(#downloadBtn):not([hidden]) {
     left: 50%;
     transform: translateX(-50%);
 }
+
+.reply-highlight,
+.reply-highlight * {
+    background: var(--green) !important;
+    color: var(--black) !important;
+}
+
+.darkgreen {
+    color: var(--darkgreen);
+}
