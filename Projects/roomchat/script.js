@@ -9,6 +9,7 @@ let roomHistory = [];
 let cryptoKey = null;
 
 let replyingToMsg = null;
+let useAltEmojiDisplay = false;
 
 const RAM_LIMIT_BYTES = 400 * 1024 * 1024;
 
@@ -16,12 +17,55 @@ let pinnedRooms = JSON.parse(localStorage.getItem('pinnedRooms') || '[]');
 let pinnedStatuses = {};
 let pinMonitorPeer = null;
 
+let joinTimeoutTimer = null; // Safety timer for blank screen freezes
+
+async function hashString(str) {
+    const enc = new TextEncoder();
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', enc.encode(str));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function hideAllSections() {
+    const sections = document.querySelectorAll('section');
+    sections.forEach(sec => sec.hidden = true);
+}
+
+function applyDataAltDisplays(parent = document) {
+    const altElements = parent.querySelectorAll('[data-alt]');
+    altElements.forEach(el => {
+        if (el.id === 'templateMessageEntry' || el.closest('#templateMessageEntry')) return;
+
+        if (!el.dataset.defaultText) {
+            el.dataset.defaultText = el.innerText;
+        }
+
+        const targetText = useAltEmojiDisplay && el.dataset.alt ? el.dataset.alt : el.dataset.defaultText;
+
+        let updated = false;
+        el.childNodes.forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                node.textContent = targetText;
+                updated = true;
+            }
+        });
+
+        if (!updated) {
+            el.innerText = targetText;
+        }
+    });
+}
+
+function updateUnstyledEmojiDisplay() {
+    const el = document.getElementById('isUsingUnstyledEmojis');
+    if (el) el.innerText = useAltEmojiDisplay ? 'True' : 'False';
+}
+
 function formatChatMessage(rawText) {
     if (!rawText) return '';
 
     let text = rawText.trim();
 
-    // Step 1: Replace <url> tags with <a> links (allows inner formatting and links out)
     text = text.replace(/<(.*?)>/g, (match, url) => {
         let trimmedUrl = url.trim();
         let href = trimmedUrl;
@@ -31,7 +75,6 @@ function formatChatMessage(rawText) {
         return `<a href="${href}" target="_blank" rel="noopener noreferrer">${trimmedUrl}</a>`;
     });
 
-    // Step 2: Escape remaining naked '<' and '>' to prevent XSS (ignoring our generated <a> tags)
     const parts = text.split(/(<a\b[^>]*>.*?<\/a>)/gi);
     text = parts.map(part => {
         if (part.toLowerCase().startsWith('<a')) {
@@ -43,7 +86,6 @@ function formatChatMessage(rawText) {
             .replace(/>/g, '&gt;');
     }).join('');
 
-    // Step 3: Parse custom formatting tags
     text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<i><b>$1</b></i>');
     text = text.replace(/\*\*(.*?)\*\*/g, '<i>$1</i>');
     text = text.replace(/\*(.*?)\*/g, '<b>$1</b>');
@@ -380,6 +422,7 @@ function transitionTo(targetSectionId) {
     }
 
     const targetSection = document.getElementById(targetSectionId);
+    if (!targetSection) return;
     targetSection.hidden = false;
 
     focusActiveInput();
@@ -403,6 +446,8 @@ function transitionTo(targetSectionId) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    applyDataAltDisplays();
+    updateUnstyledEmojiDisplay();
     transitionTo('logon');
     updateFavicon('1');
     updateNotifBar();
@@ -444,15 +489,39 @@ document.getElementById('settingsInput').addEventListener('keydown', (e) => {
 
         if (val === '') {
             transitionTo('menu');
-        } else if (val === '1' || val === '2' || val === '3') {
-            document.body.className = `theme-${val}`;
-            updateFavicon(val);
+        } else if (val === '1') {
+            transitionTo('themeSelect');
+            playSFX('press.wav');
+        } else if (val === '2') {
+            useAltEmojiDisplay = !useAltEmojiDisplay;
+            applyDataAltDisplays();
+            updateUnstyledEmojiDisplay();
             playSFX('success.wav');
         } else {
             playSFX('error.wav');
         }
     }
 });
+
+const themeSelectInput = document.getElementById('themeSelectInput');
+if (themeSelectInput) {
+    themeSelectInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value.trim();
+            e.target.value = '';
+
+            if (val === '') {
+                transitionTo('settings');
+            } else if (val === '1' || val === '2' || val === '3') {
+                document.body.className = `theme-${val}`;
+                updateFavicon(val);
+                playSFX('success.wav');
+            } else {
+                playSFX('error.wav');
+            }
+        }
+    });
+}
 
 document.getElementById('roomSearchInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -478,6 +547,7 @@ async function initPeerSession(roomId) {
     peer = new Peer(roomId);
 
     peer.on('open', () => {
+        if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
         isHost = true;
         setupHostRoom(roomId);
         if (pinnedRooms.includes(roomId)) {
@@ -487,17 +557,31 @@ async function initPeerSession(roomId) {
 
     peer.on('error', (err) => {
         if (err.type === 'unavailable-id') {
+            if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
             isHost = false;
             peer.destroy();
             peer = null;
             setupClientRoom(roomId);
         } else {
-            setInputsDisabled(false);
-            playSFX('error.wav');
-            const miscErr = document.getElementById('miscJoinError');
-            if (miscErr) miscErr.hidden = false;
+            handleJoinFailure(roomId, 'Error initializing session or unreachable ID.');
         }
     });
+}
+
+function handleJoinFailure(roomId, errorMessage) {
+    if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
+    leaveCurrentRoom();
+    setInputsDisabled(false);
+    playSFX('error.wav');
+    transitionTo('roomSearch');
+    const miscErr = document.getElementById('miscJoinError');
+    if (miscErr) {
+        miscErr.innerText = errorMessage;
+        miscErr.hidden = false;
+    }
+    if (pinnedRooms.includes(roomId)) {
+        updateRoomStatus(roomId, false);
+    }
 }
 
 function storeHostMessage(msgData) {
@@ -519,6 +603,7 @@ function setupHostRoom(roomId) {
 
     peer.on('connection', (conn) => {
         connections.push(conn);
+        conn.authenticated = true; // Auto-authenticated without challenge
 
         conn.on('data', async (rawPacket) => {
             let data;
@@ -557,7 +642,7 @@ function setupHostRoom(roomId) {
                 broadcast(sysMsg, conn.peer);
 
             } else if (data.type === 'chat') {
-                appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
+                appendMessage(data.author, data.text, data.msgId, false, data.media, data.mediaType, data.replyTo);
                 storeHostMessage(data);
                 if (document.hidden) playMessageSFX();
                 broadcast(data, conn.peer);
@@ -582,7 +667,6 @@ function setupHostRoom(roomId) {
             const leavingUserObj = roomUsers.find(u => u.peerId === conn.peer);
             connections = connections.filter(c => c !== conn);
 
-            // ONLY send left message if the user actually successfully joined the room list
             if (leavingUserObj) {
                 const leavingUser = leavingUserObj.name;
                 roomUsers = roomUsers.filter(u => u.peerId !== conn.peer);
@@ -600,32 +684,34 @@ function setupHostRoom(roomId) {
 }
 
 function setupClientRoom(roomId) {
+    hideAllSections();
+    console.log(`[Client] Attempting join for room: ${roomId}`);
+
+    if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
+    joinTimeoutTimer = setTimeout(() => {
+        console.warn(`[Client] Timeout triggered for ${roomId}`);
+        handleJoinFailure(roomId, 'Connection timed out while joining room.');
+    }, 8000);
+
     peer = new Peer();
 
-    peer.on('error', () => {
-        setInputsDisabled(false);
-        playSFX('error.wav');
-        const miscErr = document.getElementById('miscJoinError');
-        if (miscErr) miscErr.hidden = false;
-        if (pinnedRooms.includes(roomId)) {
-            updateRoomStatus(roomId, false);
-        }
+    peer.on('error', (err) => {
+        console.error('[Client] Peer error:', err);
+        handleJoinFailure(roomId, 'Failed to initialize peer client.');
     });
 
-    peer.on('open', () => {
-        hostConn = peer.connect(roomId);
+    peer.on('open', (id) => {
+        console.log(`[Client] Local peer open with ID ${id}, connecting to host ${roomId}...`);
+        hostConn = peer.connect(roomId, { reliable: true });
 
-        hostConn.on('error', () => {
-            setInputsDisabled(false);
-            playSFX('error.wav');
-            const miscErr = document.getElementById('miscJoinError');
-            if (miscErr) miscErr.hidden = false;
-            if (pinnedRooms.includes(roomId)) {
-                updateRoomStatus(roomId, false);
-            }
+        hostConn.on('error', (err) => {
+            console.error('[Client] hostConn error:', err);
+            handleJoinFailure(roomId, 'Failed to connect to host connection.');
         });
 
         hostConn.on('open', () => {
+            if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
+            console.log('[Client] Connected to host data channel, sending join...');
             sendEncrypted(hostConn, { type: 'join', user: currentUser });
             document.getElementById('roomIDDisplay').innerText = roomId;
             document.getElementById('roomCreatorDisplay').innerText = 'Host';
@@ -646,11 +732,15 @@ function setupClientRoom(roomId) {
             }
 
             if (data.type === 'error') {
-                playSFX('error.wav');
                 leaveCurrentRoom();
+                setInputsDisabled(false);
+                playSFX('error.wav');
                 transitionTo('roomSearch');
                 const errEl = document.getElementById('sameUserError');
-                if (errEl) errEl.hidden = false;
+                if (errEl) {
+                    errEl.innerText = data.message || 'Error joining room.';
+                    errEl.hidden = false;
+                }
             } else if (data.type === 'history') {
                 const msgContainer = document.getElementById('msgContainer');
                 const messages = msgContainer.querySelectorAll('.message:not(#templateMessageEntry)');
@@ -661,7 +751,7 @@ function setupClientRoom(roomId) {
                     const author = isSys ? '[System]' : msg.author;
 
                     if (!document.querySelector(`[data-msg-id="${msg.msgId}"]`)) {
-                        appendMessage(author, msg.text, msg.msgId, isSys, msg.image, msg.replyTo, true);
+                        appendMessage(author, msg.text, msg.msgId, isSys, msg.media, msg.mediaType, msg.replyTo, true);
                     }
 
                     if (msg.votes) {
@@ -674,7 +764,7 @@ function setupClientRoom(roomId) {
                 updateUserList(data.users);
             } else if (data.type === 'chat') {
                 if (!document.querySelector(`[data-msg-id="${data.msgId}"]`)) {
-                    appendMessage(data.author, data.text, data.msgId, false, data.image, data.replyTo);
+                    appendMessage(data.author, data.text, data.msgId, false, data.media, data.mediaType, data.replyTo);
                 }
                 if (document.hidden) playMessageSFX();
             } else if (data.type === 'system') {
@@ -700,7 +790,7 @@ function setupClientRoom(roomId) {
                 transitionTo('roomSearch');
                 const miscErr = document.getElementById('miscJoinError');
                 if (miscErr) {
-                    miscErr.innerText = 'The host has closed or left the room.';
+                    miscErr.innerText = 'The host has closed or left the room, or connection dropped.';
                     miscErr.hidden = false;
                 }
             }
@@ -745,6 +835,7 @@ function clearReplyTarget() {
 }
 
 function leaveCurrentRoom() {
+    if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
     const activeRoomId = currentRoom;
     if (isHost && connections.length > 0) {
         connections.forEach(conn => conn.close());
@@ -805,7 +896,7 @@ document.getElementById('chatInput').addEventListener('keydown', (e) => {
             replyTo: replyingToMsg ? { ...replyingToMsg } : null
         };
 
-        appendMessage(currentUser, text, msgId, false, null, msgData.replyTo);
+        appendMessage(currentUser, text, msgId, false, null, null, msgData.replyTo);
         clearReplyTarget();
 
         if (isHost) {
@@ -829,31 +920,10 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
     if (!file) return;
 
     e.target.value = '';
-
     const reader = new FileReader();
-    reader.onload = (evt) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const maxDim = 800;
-            let width = img.width;
-            let height = img.height;
 
-            if (width > height && width > maxDim) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
-            } else if (height > maxDim) {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const imageDataBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
+    if (file.type.startsWith('video/')) {
+        reader.onload = (evt) => {
             const text = document.getElementById('chatInput').value.trim();
             document.getElementById('chatInput').value = '';
 
@@ -862,12 +932,13 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
                 type: 'chat',
                 author: currentUser,
                 text: text,
-                image: imageDataBase64,
+                media: evt.target.result,
+                mediaType: 'video',
                 msgId: msgId,
                 replyTo: replyingToMsg ? { ...replyingToMsg } : null
             };
 
-            appendMessage(currentUser, text, msgId, false, imageDataBase64, msgData.replyTo);
+            appendMessage(currentUser, text, msgId, false, evt.target.result, 'video', msgData.replyTo);
             clearReplyTarget();
 
             if (isHost) {
@@ -879,9 +950,61 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
                 playSFX('error.wav');
             }
         };
-        img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    } else {
+        reader.onload = (evt) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const maxDim = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > maxDim) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                } else if (height > maxDim) {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const imageDataBase64 = canvas.toDataURL(file.type === 'image/gif' ? 'image/gif' : 'image/jpeg', 0.7);
+
+                const text = document.getElementById('chatInput').value.trim();
+                document.getElementById('chatInput').value = '';
+
+                const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+                const msgData = {
+                    type: 'chat',
+                    author: currentUser,
+                    text: text,
+                    media: imageDataBase64,
+                    mediaType: 'image',
+                    msgId: msgId,
+                    replyTo: replyingToMsg ? { ...replyingToMsg } : null
+                };
+
+                appendMessage(currentUser, text, msgId, false, imageDataBase64, 'image', msgData.replyTo);
+                clearReplyTarget();
+
+                if (isHost) {
+                    storeHostMessage(msgData);
+                    broadcast(msgData);
+                } else if (hostConn) {
+                    sendEncrypted(hostConn, msgData);
+                } else {
+                    playSFX('error.wav');
+                }
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
 });
 
 function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
@@ -923,9 +1046,7 @@ function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             const wrapper = node.cloneNode(false);
             element.appendChild(wrapper);
-
             typewriteMessageContent(wrapper, node.innerHTML, false);
-
             setTimeout(processNextNode, 1000 / 60);
         } else {
             element.appendChild(node.cloneNode(true));
@@ -936,7 +1057,7 @@ function typewriteMessageContent(element, htmlContent, skipAnimation = false) {
     processNextNode();
 }
 
-function appendMessage(author, text, msgId, isSystem = false, imageData = null, replyData = null, skipAnimation = false) {
+function appendMessage(author, text, msgId, isSystem = false, mediaData = null, mediaType = 'image', replyData = null, skipAnimation = false) {
     const container = document.getElementById('msgContainer');
     const template = document.getElementById('templateMessageEntry');
     const msg = template.cloneNode(true);
@@ -946,6 +1067,8 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
     msg.dataset.votes = JSON.stringify({});
     msg.hidden = false;
 
+    applyDataAltDisplays(msg);
+
     const replyingElements = msg.querySelectorAll('[data-replying]');
     const replyUserEl = msg.querySelector('#replyingToUser');
     const replyContentEl = msg.querySelector('#replyingToContent');
@@ -953,7 +1076,7 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
     if (replyData) {
         replyingElements.forEach(el => el.hidden = false);
         if (replyUserEl) replyUserEl.innerText = `${replyData.author}: `;
-        if (replyContentEl) replyContentEl.innerHTML = formatChatMessage(replyData.text) || '[Image]';
+        if (replyContentEl) replyContentEl.innerHTML = formatChatMessage(replyData.text) || '[Media]';
     } else {
         replyingElements.forEach(el => el.hidden = true);
     }
@@ -969,13 +1092,34 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
     }
 
     const msgImg = msg.querySelector('#messageImage');
-    const imgBreaks = msg.querySelectorAll('#imageBreak');
+    const imgBreaks = msg.querySelectorAll('.imageBreak');
     const downloadBtn = msg.querySelector('#downloadBtn');
 
-    if (imageData && msgImg) {
-        msgImg.src = imageData;
-        msgImg.hidden = false;
+    let msgVid = msg.querySelector('#messageVideo');
+    if (!msgVid && msgImg) {
+        msgVid = document.createElement('video');
+        msgVid.id = 'messageVideo';
+        msgVid.className = 'message-image';
+        msgVid.controls = true;
+        msgVid.autoplay = true;
+        msgVid.loop = true;
+        msgVid.muted = true;
+        msgVid.hidden = true;
+        msgImg.parentNode.insertBefore(msgVid, msgImg.nextSibling);
+    }
+
+    if (mediaData) {
         imgBreaks.forEach(br => br.hidden = false);
+        if (mediaType === 'video' && msgVid) {
+            msgVid.src = mediaData;
+            msgVid.hidden = false;
+            msgVid.autoplay = true;
+            if (msgImg) msgImg.hidden = true;
+        } else if (msgImg) {
+            msgImg.src = mediaData;
+            msgImg.hidden = false;
+            if (msgVid) msgVid.hidden = true;
+        }
 
         if (downloadBtn) {
             downloadBtn.hidden = false;
@@ -983,16 +1127,20 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
                 const now = new Date();
                 const dateStr = now.toISOString().split('T')[0];
                 const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-                const filename = `${currentRoom || 'room'}-${dateStr}-${timeStr}.png`;
+                const ext = mediaType === 'video' ? 'mp4' : 'png';
+                const filename = `${currentRoom || 'room'}-${dateStr}-${timeStr}.${ext}`;
 
                 const a = document.createElement('a');
-                a.href = imageData;
+                a.href = mediaData;
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
             };
         }
+    } else {
+        if (msgImg) msgImg.hidden = true;
+        if (msgVid) msgVid.hidden = true;
     }
 
     const upBtn = msg.querySelector('#upvoteBtn');
@@ -1028,7 +1176,7 @@ function appendMessage(author, text, msgId, isSystem = false, imageData = null, 
             replyBtn.hidden = false;
             replyBtn.onclick = () => {
                 playSFX('press.wav');
-                setReplyTarget(msgId, author, text || '[Image]');
+                setReplyTarget(msgId, author, text || '[Media]');
             };
         }
     }

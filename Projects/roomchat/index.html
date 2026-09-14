@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
     <head>
         <meta charset="UTF-8">
@@ -38,7 +38,7 @@
                 Select an option to continue.<br>
                 <br>
                 1. Join/Create RoomID<br>
-                2. Change Theme<br>
+                2. Settings<br>
                 3. Change Username<br>
                 <br>
                 Enter a choice. (1-3)<br>
@@ -65,12 +65,25 @@
                 Select an option to continue.<br>
                 Or, submit an empty option to return to the main menu.<br>
                 <br>
-                Avaliable Themes:<br>
+                Available Settings:<br>
+                1: Change Theme<br>
+                2: Use unstyled emojis? [<span id="isUsingUnstyledEmojis">False</span>]<br>
+            </p>
+            <span>> </span><input autocomplete="off" type="text" id="settingsInput" maxlength="1" oninput="this.value = this.value.replace(/[^12]/g, '')">
+        </section>
+
+        <section id="themeSelect" hidden>
+            <p>
+                Welcome to roomchat!<br>
+                Select an option to continue.<br>
+                Or, submit an empty option to return to the settings page.<br>
+                <br>
+                Available Themes:<br>
                 1: Classic Terminal (Green)<br>
                 2: Kawaii (Pink)<br>
                 3: Gray<br>
             </p>
-            <span>> </span><input autocomplete="off" type="text" id="settingsInput" maxlength="1" oninput="this.value = this.value.replace(/[^123]/g, '')">
+            <span>> </span><input autocomplete="off" type="text" id="themeSelectInput" maxlength="1" oninput="this.value = this.value.replace(/[^123]/g, '')">
         </section>
 
         <section id="room" hidden>
@@ -91,18 +104,18 @@
             <div class="msgs" id="msgContainer">
                 <p hidden class="message" id="templateMessageEntry">
                     <span data-replying hidden class="darkgreen">┌ </span><b id="replyingToUser" class="selectable darkgreen" data-replying hidden>OnlyTwentyCharacters: </b><span id="replyingToContent" class="selectable darkgreen" data-replying hidden>Message Contents</span><br data-replying hidden>
-                    <b id="messageAuthor" class="selectable">OnlyTwentyCharacters: </b><span id="messageContent" class="selectable">Message Contents</span><br id="imageBreak" hidden>
-                    <img class="message-image" id="messageImage" hidden><br id="imageBreak" hidden>
+                    <b id="messageAuthor" class="selectable">OnlyTwentyCharacters: </b><span id="messageContent" class="selectable">Message Contents</span><br class="imageBreak" hidden>
+                    <img class="message-image" id="messageImage" hidden><br class="imageBreak" hidden>
                     <span id="messageReactions"></span>
-                    <button type="button" id="upvoteBtn" class="reactionBtn">[👍]</button>
-                    <button type="button" id="downvoteBtn" class="reactionBtn">[👎]</button>
-                    <button type="button" id="replyBtn" class="reactionBtn">[↩️]</button>
-                    <button type="button" id="waveBtn" class="reactionBtn" hidden>[👋]</button>
-                    <button type="button" id="downloadBtn" class="reactionBtn" hidden>[⬇️]</button>
+                    <button type="button" id="upvoteBtn" class="reactionBtn" data-alt="[👍︎]">[👍]</button>
+                    <button type="button" id="downvoteBtn" class="reactionBtn" data-alt="[👎︎]">[👎]</button>
+                    <button type="button" id="replyBtn" class="reactionBtn" data-alt="[↩]">[↩️]</button>
+                    <button type="button" id="waveBtn" class="reactionBtn" data-alt="[👋︎]" hidden>[👋]</button>
+                    <button type="button" id="downloadBtn" class="reactionBtn" data-alt="[⬇]" hidden>[⬇️]</button>
                 </p>
             </div>
             <div class="bottombar">
-                <span class="msgbox-prefix">[</span><input autocomplete="off" id="chatInput" class="msgbox" type="text" maxlength="200"><span class="msgbox-suffix">]</span><button class="attachImgBtn" id="sendImageButton">[+]</button><input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <span class="msgbox-prefix">[</span><input autocomplete="off" id="chatInput" class="msgbox" type="text" maxlength="200"><span class="msgbox-suffix">]</span><button class="attachImgBtn" id="sendImageButton">[+]</button><input type="file" id="imageInput" accept="image/*,video/*" style="display: none;">
             </div>
         </section>
     </body>
