@@ -300,3 +300,11 @@ a {
     text-decoration: underline;
     user-select: text;
 }
+
+b {
+    user-select: inherit;
+}
+
+i {
+    user-select: inherit;
+}
