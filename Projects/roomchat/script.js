@@ -11,13 +11,131 @@ let cryptoKey = null;
 let replyingToMsg = null;
 let useAltEmojiDisplay = false;
 
+let pendingRoomId = "";
+let profanityFilterLevel = 3;
+let isLibraryOnline = false;
+
 const RAM_LIMIT_BYTES = 400 * 1024 * 1024;
 
 let pinnedRooms = JSON.parse(localStorage.getItem('pinnedRooms') || '[]');
 let pinnedStatuses = {};
 let pinMonitorPeer = null;
 
-let joinTimeoutTimer = null; // Safety timer for blank screen freezes
+let joinTimeoutTimer = null;
+
+const PROFANITY_OFFENSIVE = [
+    "fuck", "fuxk", "fucx", "fux", "fuk", "fuc", "fugk", "fucg",
+    "shit", "shet", "shite", "shiet",
+    "nigger", "nigga", "nigha", "nighe", "niga", "nigge", "nijja", "nija", "nig", "nga",
+    "bitch", "bich", "btch",
+    "bastard", "bastrd", "asshole", "asshle", "ashole"
+];
+
+const PROFANITY_MILD = [
+    "damn", "darn", "dang", "hell", "freak", "freaking", "poop",
+    "heck", "frig", "frigg", "frigging", "freaking", "freakin",
+    "titty", "tity", "boob", "boobie", "booby", "tits", "titties",
+    "penis", "cock", "peis", "cok", "cox", "cocs"
+];
+
+const LEET_MAP = {
+    'a': ['a', '4', '@', '\\*'],
+    'b': ['b', '8', '6'],
+    'c': ['c', '\\(', '<', '\\['],
+    'd': ['d'],
+    'e': ['e', '3', '\\*'],
+    'f': ['f', 'ph'],
+    'g': ['g', '9', '6'],
+    'h': ['h', '#'],
+    'i': ['i', '1', '!', '\\|', '\\*'],
+    'l': ['l', '1', '\\|', 'i', '!'],
+    'o': ['o', '0', '\\*'],
+    'p': ['p', 'q'],
+    'q': ['q', 'p'],
+    'r': ['r'],
+    's': ['s', '5', '\\$'],
+    't': ['t', '7', '\\+'],
+    'u': ['u', 'v', '\\*'],
+    'w': ['w', 'vv'],
+    'x': ['x', '%'],
+    'y': ['y']
+};
+
+function generateRegexPattern(words) {
+    if (!words || words.length === 0) return null;
+
+    const wordPatterns = words.map(word => {
+        return word.toLowerCase().split('').map(char => {
+            const replacements = LEET_MAP[char] || [char];
+            return `(?:${replacements.join('|')})`;
+        }).join('[\\s\\-_]*');
+    });
+
+    return new RegExp(`\\b\\w*(?:${wordPatterns.join('|')})\\w*\\b`, 'gi');
+}
+
+const regexLevel2 = generateRegexPattern(PROFANITY_OFFENSIVE);
+const regexLevel3 = generateRegexPattern([...PROFANITY_OFFENSIVE, ...PROFANITY_MILD]);
+
+let libraryFilter = null;
+
+async function checkFilterLibraryHealth() {
+    if (typeof Filter !== 'undefined') {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+            const res = await fetch('https://cdn.jsdelivr.net/npm/bad-words@3.0.4/lib/badwords.min.js', {
+                method: 'HEAD',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                libraryFilter = new Filter();
+                isLibraryOnline = true;
+                return true;
+            }
+        } catch (err) {
+            console.warn("Profanity filter library server is unreachable. Falling back to local regex engine.");
+        }
+    }
+    libraryFilter = null;
+    isLibraryOnline = false;
+    return false;
+}
+
+function applyProfanityFilter(text) {
+    if (!text || profanityFilterLevel === 1) return text;
+
+    let filteredText = text;
+
+    const replaceWholeWord = (regex, input) => {
+        return input.replace(regex, (match) => '#'.repeat(match.length));
+    };
+
+    if (profanityFilterLevel === 2) {
+        if (regexLevel2) {
+            filteredText = replaceWholeWord(regexLevel2, filteredText);
+        }
+    } else if (profanityFilterLevel === 3) {
+        if (isLibraryOnline && libraryFilter) {
+            try {
+                libraryFilter.placeHolder = '#';
+                filteredText = libraryFilter.clean(filteredText);
+                filteredText = filteredText.replaceAll('*', '#');
+            } catch (err) {
+                if (regexLevel3) {
+                    filteredText = replaceWholeWord(regexLevel3, filteredText);
+                }
+            }
+        } else if (regexLevel3) {
+            filteredText = replaceWholeWord(regexLevel3, filteredText);
+        }
+    }
+
+    return filteredText;
+}
 
 async function hashString(str) {
     const enc = new TextEncoder();
@@ -64,7 +182,7 @@ function updateUnstyledEmojiDisplay() {
 function formatChatMessage(rawText) {
     if (!rawText) return '';
 
-    let text = rawText.trim();
+    let text = applyProfanityFilter(rawText.trim());
 
     text = text.replace(/<(.*?)>/g, (match, url) => {
         let trimmedUrl = url.trim();
@@ -399,9 +517,10 @@ function transitionTo(targetSectionId) {
         activeTransitionTimer = null;
     }
 
+    hideAllSections();
+
     const sections = document.querySelectorAll('section');
     sections.forEach(sec => {
-        sec.hidden = true;
         const input = sec.querySelector('input');
         if (input) input.value = '';
     });
@@ -493,6 +612,9 @@ document.getElementById('settingsInput').addEventListener('keydown', (e) => {
             transitionTo('themeSelect');
             playSFX('press.wav');
         } else if (val === '2') {
+            transitionTo('fontSelect');
+            playSFX('press.wav');
+        } else if (val === '3') {
             useAltEmojiDisplay = !useAltEmojiDisplay;
             applyDataAltDisplays();
             updateUnstyledEmojiDisplay();
@@ -502,6 +624,31 @@ document.getElementById('settingsInput').addEventListener('keydown', (e) => {
         }
     }
 });
+
+const fontSelectInput = document.getElementById('fontSelectInput');
+if (fontSelectInput) {
+    fontSelectInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value.trim();
+            e.target.value = '';
+
+            if (val === '') {
+                transitionTo('settings');
+            } else if (['1', '2', '3', '4'].includes(val)) {
+                const fonts = {
+                    '1': "'Cascadia Mono', monospace",
+                    '2': "'Consolas', monospace",
+                    '3': "'JetBrains Mono', monospace",
+                    '4': "'Roboto Mono', monospace"
+                };
+                document.documentElement.style.setProperty('--font', fonts[val]);
+                playSFX('success.wav');
+            } else {
+                playSFX('error.wav');
+            }
+        }
+    });
+}
 
 const themeSelectInput = document.getElementById('themeSelectInput');
 if (themeSelectInput) {
@@ -530,10 +677,44 @@ document.getElementById('roomSearchInput').addEventListener('keydown', (e) => {
             transitionTo('menu');
             return;
         }
-        setInputsDisabled(true);
-        initPeerSession(roomId);
+        pendingRoomId = roomId;
+        transitionTo('roomCreate');
+        playSFX('press.wav');
     }
 });
+
+const roomCreateInput = document.getElementById('roomCreateInput');
+if (roomCreateInput) {
+    roomCreateInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value.trim();
+            e.target.value = '';
+
+            if (val === '') {
+                transitionTo('roomSearch');
+            } else if (val === '1') {
+                profanityFilterLevel = (profanityFilterLevel % 3) + 1;
+                const profanitySpan = document.getElementById('roomCreationAllowProfanity');
+                if (profanitySpan) {
+                    const levelLabels = {
+                        1: 'Level 1 (No Filter)',
+                        2: 'Level 2 (Offensive Only)',
+                        3: 'Level 3 (I am a baby and cannot afford to hear anything potentially harmful)'
+                    };
+                    profanitySpan.innerText = levelLabels[profanityFilterLevel];
+                }
+                playSFX('press.wav');
+            } else if (val === '2') {
+                playSFX('success.wav');
+                setInputsDisabled(true);
+                hideAllSections();
+                initPeerSession(pendingRoomId);
+            } else {
+                playSFX('error.wav');
+            }
+        }
+    });
+}
 
 async function initPeerSession(roomId) {
     currentRoom = roomId;
@@ -546,10 +727,10 @@ async function initPeerSession(roomId) {
 
     peer = new Peer(roomId);
 
-    peer.on('open', () => {
+    peer.on('open', async () => {
         if (joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
         isHost = true;
-        setupHostRoom(roomId);
+        await setupHostRoom(roomId);
         if (pinnedRooms.includes(roomId)) {
             updateRoomStatus(roomId, true);
         }
@@ -591,7 +772,7 @@ function storeHostMessage(msgData) {
     }
 }
 
-function setupHostRoom(roomId) {
+async function setupHostRoom(roomId) {
     document.getElementById('roomIDDisplay').innerText = roomId;
     document.getElementById('roomCreatorDisplay').innerText = currentUser;
 
@@ -601,9 +782,24 @@ function setupHostRoom(roomId) {
     playSFX('success.wav');
     transitionTo('room');
 
+    // Run health check on external filter library server
+    if (profanityFilterLevel > 1) {
+        const libraryOnline = await checkFilterLibraryHealth();
+        if (!libraryOnline) {
+            const sysMsgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+            const sysMsg = {
+                type: 'system',
+                text: 'Profanity filters are currently offline. This means this chat will be less protected with a cheaper system.',
+                msgId: sysMsgId
+            };
+            appendMessage('[System]', sysMsg.text, sysMsgId, true);
+            storeHostMessage(sysMsg);
+        }
+    }
+
     peer.on('connection', (conn) => {
         connections.push(conn);
-        conn.authenticated = true; // Auto-authenticated without challenge
+        conn.authenticated = true;
 
         conn.on('data', async (rawPacket) => {
             let data;
@@ -638,7 +834,12 @@ function setupHostRoom(roomId) {
                 appendMessage('[System]', sysMsg.text, msgId, true);
                 storeHostMessage(sysMsg);
 
-                sendEncrypted(conn, { type: 'history', messages: roomHistory.slice(-69) });
+                sendEncrypted(conn, {
+                    type: 'history',
+                    messages: roomHistory.slice(-69),
+                    filterLevel: profanityFilterLevel,
+                    isLibraryOnline
+                });
                 broadcast(sysMsg, conn.peer);
 
             } else if (data.type === 'chat') {
@@ -742,6 +943,12 @@ function setupClientRoom(roomId) {
                     errEl.hidden = false;
                 }
             } else if (data.type === 'history') {
+                if (data.filterLevel !== undefined) {
+                    profanityFilterLevel = data.filterLevel;
+                }
+                if (data.isLibraryOnline !== undefined) {
+                    isLibraryOnline = data.isLibraryOnline;
+                }
                 const msgContainer = document.getElementById('msgContainer');
                 const messages = msgContainer.querySelectorAll('.message:not(#templateMessageEntry)');
                 messages.forEach(m => m.remove());

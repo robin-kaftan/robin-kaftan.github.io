@@ -12,10 +12,11 @@
         <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
         <title>roomchat</title>
         <link rel="stylesheet" href="style.css">
-        <link rel="icon" href="./Resources/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="./Resources/theme-1.png" type="image/png">
+        <script src="https://cdn.jsdelivr.net/npm/bad-words@3.0.4/lib/badwords.min.js"></script>
         <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
         <script defer src="script.js"></script>
-    </head>
+    </head> 
 
     <body class="theme-1">
         <div class="topbar">
@@ -67,9 +68,25 @@
                 <br>
                 Available Settings:<br>
                 1: Change Theme<br>
-                2: Use unstyled emojis? [<span id="isUsingUnstyledEmojis">False</span>]<br>
+                2: Change Font<br>
+                3: Use unstyled emojis? [<span id="isUsingUnstyledEmojis">False</span>]<br>
             </p>
-            <span>> </span><input autocomplete="off" type="text" id="settingsInput" maxlength="1" oninput="this.value = this.value.replace(/[^12]/g, '')">
+            <span>> </span><input autocomplete="off" type="text" id="settingsInput" maxlength="1" oninput="this.value = this.value.replace(/[^123]/g, '')">
+        </section>
+
+        <section id="fontSelect" hidden>
+            <p>
+                Welcome to roomchat!<br>
+                Select an option to continue.<br>
+                Or, submit an empty option to return to the settings page.<br>
+                <br>
+                Available Fonts:<br>
+                1: Cascadia Mono<br>
+                2: Consolas<br>
+                3: JetBrains Mono<br>
+                4: Roboto Mono<br>
+            </p>
+            <span>> </span><input autocomplete="off" type="text" id="fontSelectInput" maxlength="1" oninput="this.value = this.value.replace(/[^1234]/g, '')">
         </section>
 
         <section id="themeSelect" hidden>
@@ -86,10 +103,23 @@
             <span>> </span><input autocomplete="off" type="text" id="themeSelectInput" maxlength="1" oninput="this.value = this.value.replace(/[^123]/g, '')">
         </section>
 
+        <section id="roomCreate" hidden>
+            <p>
+                Room Creation:<br>
+                Complete this short form to continue.<br>
+                Or, submit an empty option to return to the room id entry.<br>
+                <br>
+                Room Settings:<br>
+                1: Allow Profanity [<span id="roomCreationAllowProfanity">Level 3 (I am a baby and cannot afford to hear anything potentially harmful)</span>]<br>
+                2: End Form and Create Room<br>
+            </p>
+            <span>> </span><input autocomplete="off" type="text" id="roomCreateInput" maxlength="1" oninput="this.value = this.value.replace(/[^12]/g, '')">
+        </section>
+
         <section id="room" hidden>
             <div class="sidebar">
                 <p>
-                    Room: <span id="roomIDDisplay" class="selectable">RoomID</span> <span id="isRoomPinned" class="red">(PINNED)</span><br>
+                    Room: <span id="roomIDDisplay" class="selectable">RoomID</span> <span id="isRoomPinned" class="red" hidden>(PINNED)</span><br>
                     By: <span id="roomCreatorDisplay" class="selectable">OnlyTwentyCharacters</span><br>
                     <br>
                     Users In Room: (<span id="userCountInRoom">0</span>/25)<br>
@@ -113,6 +143,9 @@
                     <button type="button" id="waveBtn" class="reactionBtn" data-alt="[👋︎]" hidden>[👋]</button>
                     <button type="button" id="downloadBtn" class="reactionBtn" data-alt="[⬇]" hidden>[⬇️]</button>
                 </p>
+            </div>
+            <div id="activeReplyBar" hidden class="darkgreen" style="position: absolute; bottom: 2lh; right: 0; width: calc(100% - 26ch);">
+                <span id="replyTargetText"></span>
             </div>
             <div class="bottombar">
                 <span class="msgbox-prefix">[</span><input autocomplete="off" id="chatInput" class="msgbox" type="text" maxlength="200"><span class="msgbox-suffix">]</span><button class="attachImgBtn" id="sendImageButton">[+]</button><input type="file" id="imageInput" accept="image/*,video/*" style="display: none;">

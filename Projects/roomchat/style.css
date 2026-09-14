@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root {
+    --font: 'Cascadia Mono', monospace;
     --bg: #000f00;
     --gray: #909090;
     --white: #ffffff;
@@ -57,7 +60,7 @@ body.theme-3 {
 }
 
 * {
-    font-family: 'Cascadia Mono';
+    font-family: var(--font, 'Cascadia Mono');
     outline: none;
     margin: 0;
     line-height: 1.25;
