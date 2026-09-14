@@ -21,31 +21,32 @@ function formatChatMessage(rawText) {
 
     let text = rawText.trim();
 
-    // Step 1: If wrapped in < ... >, strip outer brackets and CANCEL all formatting inside
-    if (text.startsWith('<') && text.endsWith('>')) {
-        return text.substring(1, text.length - 1)
+    // Step 1: Replace <url> tags with <a> links (allows inner formatting and links out)
+    text = text.replace(/<(.*?)>/g, (match, url) => {
+        let trimmedUrl = url.trim();
+        let href = trimmedUrl;
+        if (!/^https?:\/\//i.test(href)) {
+            href = 'https://' + href;
+        }
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${trimmedUrl}</a>`;
+    });
+
+    // Step 2: Escape remaining naked '<' and '>' to prevent XSS (ignoring our generated <a> tags)
+    const parts = text.split(/(<a\b[^>]*>.*?<\/a>)/gi);
+    text = parts.map(part => {
+        if (part.toLowerCase().startsWith('<a')) {
+            return part;
+        }
+        return part
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-    }
-
-    // Step 2: Escape HTML special characters to prevent XSS
-    text = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    }).join('');
 
     // Step 3: Parse custom formatting tags
-    // ***text*** -> <i><b>text</b></i>
     text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<i><b>$1</b></i>');
-
-    // **text** -> <i>text</i>
     text = text.replace(/\*\*(.*?)\*\*/g, '<i>$1</i>');
-
-    // *text* -> <b>text</b>
     text = text.replace(/\*(.*?)\*/g, '<b>$1</b>');
-
-    // _text_ -> <span class="darkgreen">text</span>
     text = text.replace(/_(.*?)_/g, '<span class="darkgreen">$1</span>');
 
     return text;
@@ -532,7 +533,10 @@ function setupHostRoom(roomId) {
                 const isDuplicate = roomUsers.some(u => u.name.toLowerCase() === data.user.toLowerCase());
                 if (isDuplicate) {
                     sendEncrypted(conn, { type: 'error', message: 'Username is already taken in this room.' });
-                    setTimeout(() => conn.close(), 200);
+                    setTimeout(() => {
+                        connections = connections.filter(c => c !== conn);
+                        conn.close();
+                    }, 200);
                     return;
                 }
 
@@ -575,19 +579,22 @@ function setupHostRoom(roomId) {
         });
 
         conn.on('close', () => {
-            connections = connections.filter(c => c !== conn);
             const leavingUserObj = roomUsers.find(u => u.peerId === conn.peer);
-            const leavingUser = leavingUserObj ? leavingUserObj.name : "A user";
+            connections = connections.filter(c => c !== conn);
 
-            roomUsers = roomUsers.filter(u => u.peerId !== conn.peer);
-            broadcast({ type: 'userList', users: roomUsers.map(u => u.name) });
-            updateUserList(roomUsers.map(u => u.name));
+            // ONLY send left message if the user actually successfully joined the room list
+            if (leavingUserObj) {
+                const leavingUser = leavingUserObj.name;
+                roomUsers = roomUsers.filter(u => u.peerId !== conn.peer);
+                broadcast({ type: 'userList', users: roomUsers.map(u => u.name) });
+                updateUserList(roomUsers.map(u => u.name));
 
-            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
-            const sysMsg = { type: 'system', text: `${leavingUser} has left the room.`, msgId };
-            appendMessage('[System]', sysMsg.text, msgId, true);
-            storeHostMessage(sysMsg);
-            broadcast(sysMsg);
+                const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+                const sysMsg = { type: 'system', text: `${leavingUser} has left the room.`, msgId };
+                appendMessage('[System]', sysMsg.text, msgId, true);
+                storeHostMessage(sysMsg);
+                broadcast(sysMsg);
+            }
         });
     });
 }
@@ -687,13 +694,15 @@ function setupClientRoom(roomId) {
                 updateRoomStatus(roomId, false);
             }
             setInputsDisabled(false);
-            playSFX('error.wav');
-            leaveCurrentRoom();
-            transitionTo('roomSearch');
-            const miscErr = document.getElementById('miscJoinError');
-            if (miscErr) {
-                miscErr.innerText = 'The host has closed or left the room.';
-                miscErr.hidden = false;
+            if (currentRoom === roomId) {
+                playSFX('error.wav');
+                leaveCurrentRoom();
+                transitionTo('roomSearch');
+                const miscErr = document.getElementById('miscJoinError');
+                if (miscErr) {
+                    miscErr.innerText = 'The host has closed or left the room.';
+                    miscErr.hidden = false;
+                }
             }
         });
     });

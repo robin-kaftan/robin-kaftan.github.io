@@ -293,3 +293,10 @@ body.show-reactions .reactionBtn:not(#downloadBtn):not([hidden]) {
 .darkgreen {
     color: var(--darkgreen);
 }
+
+
+a {
+    color: var(--red);
+    text-decoration: underline;
+    user-select: text;
+}
