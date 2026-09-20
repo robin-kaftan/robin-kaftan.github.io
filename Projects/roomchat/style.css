@@ -147,78 +147,16 @@ section {
     line-height: 1.2;
 }
 
-.rightsidebar {
-    width: 8ch;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    color: var(--green);
-    right: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    contain: paint;
-    text-align: center;
-}
-
-.rightsidebar::after {
-    content: "|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|";
-    position: absolute;
-    top: 0;
-    left: 0;
-    max-height: 100%;
-    overflow: hidden;
-    white-space: pre;
-    color: var(--green);
-    line-height: 1.2;
-}
-
-.rightsidebar-entry {
-    display: grid;
-    place-items: center;
-    width: 4ch;
-    margin: 0 1lh;
-    background: var(--darkgreen);
-    color: var(--bg);
-    height: 4ch;
-}
-
-.rightsidebar-entry.speaking {
-    background: var(--green);
-}
-
-.rightsidebar-entry.disconnecting {
-    background: var(--red);
-}
-
-.voicecallbtn {
-    width: calc(100% - 2ch);
-    height: fit-content;
-    position: absolute;
-    right: 1ch;
-    bottom: 0;
-    padding: 0;
-    border: 0;
-    outline: 0;
-    background: var(--bg);
-    color: var(--green);
-    margin: 0;
-}
-
-.voicecallbtn:hover {
-    background: var(--green);
-    color: var(--bg);
-}
-
 .selectable {
     user-select: text;
 }
 
 .bottombar {
-    width: calc(100% - 35ch);
+    width: calc(100% - 26ch);
     height: 2lh;
     position: absolute;
     bottom: 0;
-    right: 9ch;
+    right: 0;
     overflow: hidden;
 }
 
