@@ -513,7 +513,14 @@ if (themeSelectInput) {
             if (val === '') {
                 transitionTo('settings');
             } else if (val === '1' || val === '2' || val === '3') {
-                document.body.className = `theme-${val}`;
+                // Fixed: Safely remove old theme classes without wiping body class list[cite: 1]
+                document.body.classList.forEach(cls => {
+                    if (cls.startsWith('theme-')) {
+                        document.body.classList.remove(cls);
+                    }
+                });
+
+                document.body.classList.add(`theme-${val}`);
                 updateFavicon(val);
                 playSFX('success.wav');
             } else {
