@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>experimental</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="preload" href="./assets/slices/greencontainer.png" as="image">
+        <link rel="preload" href="./assets/slices/bluecontainer.png" as="image">
+        <link rel="preload" href="./assets/slices/hallocontainer.png" as="image">
+        <link rel="preload" href="./assets/slices/jollycontainer.png" as="image">
+        <link rel="preload" href="./scrungly.ttf" as="font">
+        <script src="script.js" defer></script>
+    </head>
+    <body class="real">
+        <nav class="topbar">
+            <img src="./assets/sprites/logo.png" class="logo" alt="Logo">
+            <a class="topbar-entry nav-link" href="home.html">Home</a>
+            <a class="topbar-entry nav-link" href="projects.html">Projects</a>
+            <a class="topbar-entry nav-link" href="archive.html">Archive</a>
+            <a class="topbar-entry nav-link" href="contact.html">Contact</a>
+
+            <a class="topbar-cog nav-link" href="settings.html" title="Settings"><img class="cog" src="./assets/icons/cog.png"></a>
+        </nav>
+        <main class="iframe-container">
+            <iframe name="mainframe" src="home.html"></iframe>
+        </main>
+        <aside class="artwork-container">
+            <div class="artwork-section">
+                <img class="artwork" alt="There's supposed to be a picture here... Refresh your page or check connection." title="cool art" src="./assets/placeholder.png">
+            </div>
+            <h6 class="artwork-text">Newest Artwork</h6>
+        </aside>
+    </body>
+</html>
