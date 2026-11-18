@@ -83,6 +83,7 @@ select {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
+    container-type: size;
     gap: 0.8rem;
 }
 
@@ -137,6 +138,31 @@ select {
 }
 
 .topbar-cog:active {
+    transform: scale(0.9);
+    filter: brightness(50%);
+}
+
+.topbar-readaloud {
+    position: absolute;
+    top: 0;
+    right: calc(100cqh + 0.5rem);
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    justify-items: center;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.topbar-readaloud:hover {
+    transform: scale(1.1);
+    filter: brightness(150%);
+}
+
+.topbar-readaloud.activated {
     transform: scale(0.9);
     filter: brightness(50%);
 }
@@ -289,4 +315,14 @@ hr {
 .highlighted {
     background: var(--text);
     color: var(--bg);
+}
+
+body.read-aloud-active,
+body.read-aloud-active * {
+    cursor: default !important;
+}
+
+body.read-aloud-active a,
+body.read-aloud-active button {
+    pointer-events: auto; /* keeps hover and click detection active for reading */
 }

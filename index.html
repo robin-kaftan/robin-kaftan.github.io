@@ -7,6 +7,9 @@
         <link rel="preload" href="./assets/slices/bluecontainer.png" as="image">
         <link rel="preload" href="./assets/slices/hallocontainer.png" as="image">
         <link rel="preload" href="./assets/slices/jollycontainer.png" as="image">
+        <link rel="preload" href="./assets/sprites/logo.png" as="image">
+        <link rel="preload" href="./assets/sprites/logodark.png" as="image">
+        <link rel="preload" href="./assets/icons/cog.png" as="image">
         <link rel="preload" href="./scrungly.ttf" as="font">
         <script src="script.js" defer></script>
     </head>
@@ -18,10 +21,11 @@
             <a class="topbar-entry nav-link" href="archive.html">Archive</a>
             <a class="topbar-entry nav-link" href="contact.html">Contact</a>
 
+            <a class="topbar-readaloud" title="Read Aloud"><img class="cog" src="./assets/icons/speaker.png"></a>
             <a class="topbar-cog nav-link" href="settings.html" title="Settings"><img class="cog" src="./assets/icons/cog.png"></a>
         </nav>
         <main class="iframe-container">
-            <iframe name="mainframe" src="home.html"></iframe>
+            <iframe sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation" name="mainframe" src="home.html"></iframe>
         </main>
         <aside class="artwork-container">
             <div class="artwork-section">
