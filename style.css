@@ -186,6 +186,7 @@ select {
 
 .iframe-container {
     position: absolute;
+    background: var(--bg);
     top: calc(var(--page-margin) * 2 + var(--topbar-height));
     height: calc(100% - var(--page-margin) * 3 - var(--topbar-height));
     width: calc(100% - var(--page-margin) * 3 - var(--artwork-width));
@@ -196,9 +197,9 @@ select {
     width: 100%;
     height: 100%;
     border: none;
-    background: transparent;
+    background: var(--bg);
     opacity: 1;
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.2s linear;
 }
 
 .iframe-container>iframe.fade-out {
