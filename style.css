@@ -86,7 +86,7 @@ select {
     flex-direction: row;
     align-items: flex-start;
     container-type: size;
-    gap: 0.8rem;
+    gap: 0rem;
 }
 
 .topbar-entry {
@@ -102,18 +102,19 @@ select {
     transition: var(--transition);
     text-decoration: none;
     cursor: pointer;
+    padding: 0 0.4rem;
 }
 
 .topbar-entry:hover {
     transform: scale(1.1);
-    margin: 0 0.2rem;
+    padding: 0 0.6rem;
     image-rendering: crisp-edges;
 }
 
 .topbar-entry:active {
     transform: scale(0.9);
     color: #ffff00;
-    margin: 0 -0.2rem;
+    padding: 0 0.2rem;
     image-rendering: crisp-edges;
 }
 
