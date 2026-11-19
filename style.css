@@ -106,14 +106,14 @@ select {
 
 .topbar-entry:hover {
     transform: scale(1.1);
-    margin-right: 0.2rem;
+    margin: 0 0.2rem;
     image-rendering: crisp-edges;
 }
 
 .topbar-entry:active {
     transform: scale(0.9);
     color: #ffff00;
-    margin-right: -0.2rem;
+    margin: 0 -0.2rem;
     image-rendering: crisp-edges;
 }
 
