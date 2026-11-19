@@ -118,8 +118,8 @@ select {
     image-rendering: crisp-edges;
 }
 
-.topbar-entry:first-child {
-    margin-left: 0.6rem;
+.topbar-entry:nth-child(2) {
+    padding-left: 0.8rem;
 }
 
 .topbar-cog {
