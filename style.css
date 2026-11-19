@@ -57,6 +57,8 @@ body {
     box-sizing: border-box;
     font-family: 'Pixelify Sans';
     color: var(--text);
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: none;
 }
 
 .topbar,
@@ -69,7 +71,7 @@ select {
     border-image: var(--container);
     background: transparent;
     padding: var(--container-pad);
-    image-rendering: pixelated;
+    image-rendering: crisp-edges;
     font-size: 1rem;
 }
 
@@ -105,12 +107,14 @@ select {
 .topbar-entry:hover {
     transform: scale(1.1);
     margin-right: 0.2rem;
+    image-rendering: crisp-edges;
 }
 
 .topbar-entry:active {
     transform: scale(0.9);
     color: #ffff00;
     margin-right: -0.2rem;
+    image-rendering: crisp-edges;
 }
 
 .topbar-entry:first-child {
@@ -135,11 +139,13 @@ select {
 .topbar-cog:hover {
     transform: scale(1.1);
     filter: brightness(150%);
+    image-rendering: crisp-edges;
 }
 
 .topbar-cog:active {
     transform: scale(0.9);
     filter: brightness(50%);
+    image-rendering: crisp-edges;
 }
 
 .topbar-readaloud {
@@ -160,11 +166,13 @@ select {
 .topbar-readaloud:hover {
     transform: scale(1.1);
     filter: brightness(150%);
+    image-rendering: crisp-edges;
 }
 
 .topbar-readaloud.activated {
     transform: scale(0.9);
     filter: brightness(50%);
+    image-rendering: crisp-edges;
 }
 
 .cog {
@@ -245,12 +253,14 @@ button:hover,
 .button:hover {
     filter: brightness(150%);
     transform: scale(1.05);
+    image-rendering: crisp-edges;
 }
 
 button:active,
 .button:active {
     filter: brightness(65%);
     transform: scale(0.975);
+    image-rendering: crisp-edges;
 }
 
 .artwork-container {
@@ -274,6 +284,7 @@ button:active,
     height: 100%;
     object-fit: contain;
     image-rendering: pixelated;
+    transition: var(--transition);
 }
 
 .artwork-text {
@@ -301,8 +312,13 @@ hr {
 }
 
 .archived-artwork-container {
-    width: calc(25% - 2rem);
+    max-width: calc(25% - 2rem);
+    height: 20rem;
     aspect-ratio: 1 / 1;
+}
+
+.archived-artwork-container > .artwork-section > .artwork:hover {
+    transform: scale(1.25);
 }
 
 .logo {
@@ -315,6 +331,7 @@ hr {
 .highlighted {
     background: var(--text);
     color: var(--bg);
+    animation: highlight-pulse 0.2s ease-in-out infinite alternate;
 }
 
 body.read-aloud-active,
@@ -324,5 +341,14 @@ body.read-aloud-active * {
 
 body.read-aloud-active a,
 body.read-aloud-active button {
-    pointer-events: auto; /* keeps hover and click detection active for reading */
+    pointer-events: auto;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 var(--text);
+  }
+  100% {
+    box-shadow: 0 0 20px var(--text);
+  }
 }
